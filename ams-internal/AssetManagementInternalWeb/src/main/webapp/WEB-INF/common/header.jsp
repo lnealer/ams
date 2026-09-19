@@ -1,0 +1,65 @@
+<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="s" uri="/struts-tags" %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title><c:out value="${param.pageTitle}"/> - Internal Asset Management</title>
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/main.css"/>
+  <%--
+    Two separate tokens, deliberately.
+
+    The AJAX token is this application's own, issued per session by AjaxTokenListener and checked
+    by AjaxTokenInterceptor on the Struts side. The CSRF token is Spring Security's, checked by its
+    filter before a request reaches Struts at all. An AJAX POST has to carry both: the first is a
+    parameter, the second a header. Miss the CSRF one and the request is refused with a bare 403
+    that never reaches the application.
+  --%>
+  <meta name="ams-ajax-token" content="<c:out value='${ajaxToken}'/>"/>
+  <c:if test="${not empty _csrf}">
+    <meta name="ams-csrf-token" content="<c:out value='${_csrf.token}'/>"/>
+    <meta name="ams-csrf-header" content="<c:out value='${_csrf.headerName}'/>"/>
+  </c:if>
+</head>
+<body>
+
+<c:if test="${not empty nonProductionBanner}">
+  <div class="ams-nonprod-banner" role="alert">
+    <c:out value="${nonProductionBanner}"/>
+  </div>
+</c:if>
+
+<header class="ams-header">
+  <a class="ams-brand" href="${pageContext.request.contextPath}/assetManagement/InitDashboard.action">
+    Internal Asset Management
+  </a>
+  <div class="ams-header-right">
+    <%--
+      The customer being acted for, on every page. Most screens change that customer's data, and
+      acting on the wrong one is the easiest damaging mistake available here - so it is shown
+      permanently rather than only on the screen where it was chosen.
+    --%>
+    <s:if test="currentCustomer != null">
+      <span class="ams-current-customer">
+        <s:property value="currentCustomer.displayName" escapeHtml="true"/>
+        &middot; <a href="${pageContext.request.contextPath}/customer/CustomerPicker.action">change</a>
+      </span>
+    </s:if>
+    <s:else>
+      <span class="ams-current-customer ams-current-customer--none">
+        No customer selected &middot;
+        <a href="${pageContext.request.contextPath}/customer/CustomerPicker.action">choose</a>
+      </span>
+    </s:else>
+    <span class="ams-user">
+      <c:if test="${not empty pageContext.request.remoteUser}">
+        <c:out value="${pageContext.request.remoteUser}"/>
+      </c:if>
+    </span>
+  </div>
+</header>
+
+<jsp:include page="/WEB-INF/common/navigation.jsp"/>

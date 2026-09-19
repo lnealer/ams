@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 6.0//EN"
+    "https://struts.apache.org/dtds/struts-6.0.dtd">
+<struts>
+
+  <!--
+    Dynamic method invocation lets a URL name the method to call. It is off, and must stay off:
+    with it on, any public no-argument method on any action becomes an endpoint, which defeats the
+    per-method role checks entirely.
+  -->
+  <constant name="struts.enable.DynamicMethodInvocation" value="false"/>
+  <constant name="struts.devMode" value="false"/>
+  <constant name="struts.i18n.encoding" value="UTF-8"/>
+
+  <!-- Action beans come from the Spring root context, so they can be autowired. -->
+  <constant name="struts.objectFactory" value="spring"/>
+  <constant name="struts.objectFactory.spring.autoWire" value="name"/>
+
+  <!--
+    Both extensions are recognised. The empty one is what lets /health answer without a suffix,
+    which is what the container's monitor polls.
+  -->
+  <constant name="struts.action.extension" value="action,,"/>
+
+  <!--
+    The Spring MVC servlet is mounted at /ams/*, but this filter is mapped to /*. Excluding the
+    pattern here is what stops Struts from trying to resolve an action for the error pages.
+
+    "/" and "/index.jsp" are excluded for a different reason: because the empty action extension is
+    configured above (so that /health answers without a suffix), Struts treats a bare "/" as an
+    action request, finds nothing, and returns 404 - which means the welcome file never gets a
+    chance to run and the context root is simply broken.
+  -->
+  <constant name="struts.action.excludePattern" value="/ams/.*?,/,/index\.jsp"/>
+
+  <constant name="struts.multipart.maxSize" value="10485760"/>
+  <constant name="struts.ui.theme" value="simple"/>
+
+  <package name="AssetManagementInternalWeb" extends="json-default" abstract="true">
+
+    <interceptors>
+      <interceptor name="securityHeaders"
+                   class="org.example.am.internal.web.interceptors.SecurityHeadersInterceptor"/>
+      <interceptor name="specialCharacter"
+                   class="org.example.am.internal.web.interceptors.ValidateSpecialCharacterInterceptor"/>
+      <interceptor name="ajaxToken"
+                   class="org.example.am.internal.web.interceptors.AjaxTokenInterceptor"/>
+      <interceptor name="ajaxJsonToken"
+                   class="org.example.am.internal.web.interceptors.AjaxJsonTokenInterceptor"/>
+      <interceptor name="addressValidation"
+                   class="org.example.am.internal.web.interceptors.AddressValidationInterceptor"/>
+
+      <!--
+        The smallest usable stack: headers and the character whitelist, then the framework's own.
+        Every other stack builds on this, so a request cannot reach an action without having been
+        through both.
+      -->
+      <interceptor-stack name="basicStack">
+        <interceptor-ref name="securityHeaders"/>
+        <interceptor-ref name="specialCharacter"/>
+        <interceptor-ref name="exception"/>
+        <interceptor-ref name="servletConfig"/>
+        <interceptor-ref name="i18n"/>
+        <interceptor-ref name="prepare"/>
+        <interceptor-ref name="chain"/>
+        <interceptor-ref name="params"/>
+        <interceptor-ref name="conversionError"/>
+      </interceptor-stack>
+
+      <interceptor-stack name="defaultStack">
+        <interceptor-ref name="basicStack"/>
+        <interceptor-ref name="validation">
+          <param name="excludeMethods">input,back,cancel,browse</param>
+        </interceptor-ref>
+        <interceptor-ref name="workflow">
+          <param name="excludeMethods">input,back,cancel,browse</param>
+        </interceptor-ref>
+      </interceptor-stack>
+
+      <!-- Model driven actions need the model pushed before parameters are bound onto it. -->
+      <interceptor-stack name="modelDrivenStack">
+        <interceptor-ref name="securityHeaders"/>
+        <interceptor-ref name="specialCharacter"/>
+        <interceptor-ref name="exception"/>
+        <interceptor-ref name="servletConfig"/>
+        <interceptor-ref name="i18n"/>
+        <interceptor-ref name="prepare"/>
+        <interceptor-ref name="chain"/>
+        <interceptor-ref name="modelDriven"/>
+        <interceptor-ref name="params"/>
+        <interceptor-ref name="conversionError"/>
+        <interceptor-ref name="validation">
+          <param name="excludeMethods">input,back,cancel,browse</param>
+        </interceptor-ref>
+        <interceptor-ref name="workflow">
+          <param name="excludeMethods">input,back,cancel,browse</param>
+        </interceptor-ref>
+      </interceptor-stack>
+
+      <!-- The stack the functional screens use. -->
+      <interceptor-stack name="assetManagementStack">
+        <interceptor-ref name="modelDrivenStack"/>
+      </interceptor-stack>
+
+      <!-- AJAX endpoints additionally carry the per-session token. -->
+      <interceptor-stack name="assetManagementJsonStack">
+        <interceptor-ref name="securityHeaders"/>
+        <interceptor-ref name="specialCharacter"/>
+        <interceptor-ref name="ajaxJsonToken"/>
+        <interceptor-ref name="exception"/>
+        <interceptor-ref name="servletConfig"/>
+        <interceptor-ref name="i18n"/>
+        <interceptor-ref name="modelDriven"/>
+        <interceptor-ref name="params"/>
+        <interceptor-ref name="conversionError"/>
+      </interceptor-stack>
+
+      <interceptor-stack name="AdminUtilJsonStack">
+        <interceptor-ref name="assetManagementJsonStack"/>
+      </interceptor-stack>
+
+      <!-- The address step, which calls the address validation service on the way out. -->
+      <interceptor-stack name="addressValidationStack">
+        <interceptor-ref name="modelDrivenStack"/>
+        <interceptor-ref name="addressValidation"/>
+      </interceptor-stack>
+    </interceptors>
+
+    <default-interceptor-ref name="assetManagementStack"/>
+
+    <global-results>
+      <result name="custom_error">/WEB-INF/global/customError.jsp</result>
+      <result name="unauthorized">/WEB-INF/global/unauthorized.jsp</result>
+      <result name="error">/WEB-INF/global/customError.jsp</result>
+      <result name="invalid.token">/WEB-INF/global/invalidToken.jsp</result>
+      <result name="invalid.json.token" type="json">
+        <param name="root">jsonError</param>
+      </result>
+    </global-results>
+
+    <global-exception-mappings>
+      <!--
+        Everything unhandled ends up on the same page. The mapping is on Exception rather than on
+        specific types deliberately: an action that fails for a reason nobody anticipated should
+        still show the user something they can quote, not a container stack trace.
+      -->
+      <exception-mapping exception="java.lang.Exception" result="custom_error"/>
+    </global-exception-mappings>
+  </package>
+
+  <include file="struts-health.xml"/>
+  <include file="struts-assetManagement.xml"/>
+  <include file="struts-ajax.xml"/>
+  <include file="struts-customer.xml"/>
+  <include file="struts-order.xml"/>
+  <include file="struts-provisioning.xml"/>
+  <include file="struts-calendar.xml"/>
+  <include file="struts-user.xml"/>
+  <include file="struts-cancel.xml"/>
+  <include file="struts-services.xml"/>
+  <include file="struts-assets.xml"/>
+  <include file="struts-termsAndConditions.xml"/>
+  <include file="struts-networkChangeRequest.xml"/>
+  <include file="struts-admin.xml"/>
+  <include file="struts-error.xml"/>
+
+</struts>

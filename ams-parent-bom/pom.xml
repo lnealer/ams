@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.example.ams</groupId>
+  <artifactId>ams-parent-bom</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>AMS Parent BOM</name>
+  <description>Parent POM and dependency BOM for the AMS Internal Asset Management platform.</description>
+
+  <properties>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+    <ams.version>1.0.0-SNAPSHOT</ams.version>
+
+    <struts2.version>6.8.0</struts2.version>
+    <ognl.version>3.3.5</ognl.version>
+    <commons-text.version>1.12.0</commons-text.version>
+    <freemarker.version>2.3.33</freemarker.version>
+
+    <spring.version>5.3.39</spring.version>
+    <spring-security.version>5.3.13.RELEASE</spring-security.version>
+    <spring-security-oauth2.version>2.5.2.RELEASE</spring-security-oauth2.version>
+
+    <log4j2.version>2.26.0</log4j2.version>
+    <jackson.version>2.20.2</jackson.version>
+
+    <servlet-api.version>3.1.0</servlet-api.version>
+    <jstl.version>1.2</jstl.version>
+    <javax-annotation.version>1.3.2</javax-annotation.version>
+
+    <ojdbc8.version>12.2.0.1</ojdbc8.version>
+
+    <commons-lang3.version>3.17.0</commons-lang3.version>
+    <commons-lang.version>2.5</commons-lang.version>
+    <commons-io.version>2.17.0</commons-io.version>
+    <commons-collections4.version>4.5.0</commons-collections4.version>
+    <commons-validator.version>1.4.0</commons-validator.version>
+    <json-lib.version>2.4</json-lib.version>
+    <ezmorph.version>1.0.6</ezmorph.version>
+
+    <h2.version>1.3.176</h2.version>
+    <aspectj.version>1.7.4</aspectj.version>
+    <junit.version>4.12</junit.version>
+    <mockito.version>1.9.5</mockito.version>
+
+    <jacoco.plugin.version>0.8.5</jacoco.plugin.version>
+
+    <!--
+      The packaging plugins are the one place the original pinned versions could not be kept.
+      maven-war-plugin 2.6 and maven-ear-plugin 2.8 date from 2015 and fail to load under Maven
+      3.9 with an API incompatibility in Plexus, so the build cannot run at all with them. The
+      versions below are the closest releases that work with the Maven in use; the packaging they
+      produce is the same. The original values are recorded here so the change is visible:
+        war.plugin.version = 2.6
+        ear.plugin.version = 2.8
+      Revert both if this reactor is ever built with a Maven 3.2-era toolchain again.
+    -->
+    <war.plugin.version>3.4.0</war.plugin.version>
+    <ear.plugin.version>3.3.0</ear.plugin.version>
+    <wildfly.plugin.version>2.0.2.Final</wildfly.plugin.version>
+    <buildnumber.plugin.version>1.3</buildnumber.plugin.version>
+    <checkstyle.plugin.version>2.15</checkstyle.plugin.version>
+    <puppycrawl.checkstyle.version>5.6</puppycrawl.checkstyle.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- ==================== AMS shared modules ==================== -->
+      <dependency>
+        <groupId>com.example.ams</groupId>
+        <artifactId>AssetManagementSharedCommon</artifactId>
+        <version>${ams.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.example.ams</groupId>
+        <artifactId>AssetManagementNetworkValidation</artifactId>
+        <version>${ams.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.example.ams</groupId>
+        <artifactId>AssetManagementSharedServices</artifactId>
+        <version>${ams.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.example.ams</groupId>
+        <artifactId>AssetManagementInternalCommon</artifactId>
+        <version>${ams.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.example.ams</groupId>
+        <artifactId>AssetManagementInternalServices</artifactId>
+        <version>${ams.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.example.ams</groupId>
+        <artifactId>AssetManagementInternalWeb</artifactId>
+        <version>${ams.version}</version>
+        <type>war</type>
+      </dependency>
+
+      <!-- ==================== Struts 2 ==================== -->
+      <dependency>
+        <groupId>org.apache.struts</groupId>
+        <artifactId>struts2-core</artifactId>
+        <version>${struts2.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.struts</groupId>
+        <artifactId>struts2-json-plugin</artifactId>
+        <version>${struts2.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.struts</groupId>
+        <artifactId>struts2-spring-plugin</artifactId>
+        <version>${struts2.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.struts</groupId>
+        <artifactId>struts2-convention-plugin</artifactId>
+        <version>${struts2.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>ognl</groupId>
+        <artifactId>ognl</artifactId>
+        <version>${ognl.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-text</artifactId>
+        <version>${commons-text.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.freemarker</groupId>
+        <artifactId>freemarker</artifactId>
+        <version>${freemarker.version}</version>
+      </dependency>
+
+      <!-- ==================== Spring Framework ==================== -->
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-framework-bom</artifactId>
+        <version>${spring.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <!-- ==================== Spring Security ==================== -->
+      <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-core</artifactId>
+        <version>${spring-security.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-config</artifactId>
+        <version>${spring-security.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-web</artifactId>
+        <version>${spring-security.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-taglibs</artifactId>
+        <version>${spring-security.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.security.oauth</groupId>
+        <artifactId>spring-security-oauth2</artifactId>
+        <version>${spring-security-oauth2.version}</version>
+      </dependency>
+
+      <!-- ==================== Logging ==================== -->
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>${log4j2.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+        <version>${log4j2.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-slf4j-impl</artifactId>
+        <version>${log4j2.version}</version>
+      </dependency>
+
+      <!-- ==================== JSON ==================== -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.sf.json-lib</groupId>
+        <artifactId>json-lib</artifactId>
+        <classifier>jdk15</classifier>
+        <version>${json-lib.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.sf.ezmorph</groupId>
+        <artifactId>ezmorph</artifactId>
+        <version>${ezmorph.version}</version>
+      </dependency>
+
+      <!-- ==================== Java EE web ==================== -->
+      <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>javax.servlet-api</artifactId>
+        <version>${servlet-api.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>jstl</groupId>
+        <artifactId>jstl</artifactId>
+        <version>${jstl.version}</version>
+        <scope>runtime</scope>
+      </dependency>
+      <!--
+        The JSR-250 security annotations. Liberty provides these at runtime, so the scope is
+        provided - but @EnableGlobalMethodSecurity(jsr250Enabled = true) needs them on the compile
+        and test classpath, or the security configuration cannot be built outside the container.
+      -->
+      <dependency>
+        <groupId>javax.annotation</groupId>
+        <artifactId>javax.annotation-api</artifactId>
+        <version>${javax-annotation.version}</version>
+        <scope>provided</scope>
+      </dependency>
+
+      <!-- ==================== Persistence (JDBC only - no ORM) ==================== -->
+      <dependency>
+        <groupId>com.oracle.database.jdbc</groupId>
+        <artifactId>ojdbc8</artifactId>
+        <version>${ojdbc8.version}</version>
+        <scope>test</scope>
+      </dependency>
+
+      <!-- ==================== Apache Commons ==================== -->
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>${commons-lang3.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-lang</groupId>
+        <artifactId>commons-lang</artifactId>
+        <version>${commons-lang.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commons-io.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-collections4</artifactId>
+        <version>${commons-collections4.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-validator</groupId>
+        <artifactId>commons-validator</artifactId>
+        <version>${commons-validator.version}</version>
+      </dependency>
+
+      <!-- ==================== AOP ==================== -->
+      <dependency>
+        <groupId>org.aspectj</groupId>
+        <artifactId>aspectjtools</artifactId>
+        <version>${aspectj.version}</version>
+      </dependency>
+
+      <!-- ==================== Test ==================== -->
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-all</artifactId>
+        <version>${mockito.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <version>${h2.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-test</artifactId>
+        <version>${spring.version}</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <!-- Every AMS module logs through Log4j2. -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!--
+            The pinned Mockito bundles a cglib that predates the module system and generates its
+            proxies by calling ClassLoader.defineClass reflectively. Opening java.lang keeps the
+            pinned test stack working on a modular JDK; it is a test-time concern only and has no
+            effect on what is packaged.
+          -->
+          <argLine>--add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+        </configuration>
+      </plugin>
+    </plugins>
+
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-war-plugin</artifactId>
+          <version>${war.plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-ear-plugin</artifactId>
+          <version>${ear.plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>${jacoco.plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>buildnumber-maven-plugin</artifactId>
+          <version>${buildnumber.plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>${checkstyle.plugin.version}</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.puppycrawl.tools</groupId>
+              <artifactId>checkstyle</artifactId>
+              <version>${puppycrawl.checkstyle.version}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+  <profiles>
+    <!-- Legacy leftover from the pre-Liberty era; retained but never activated by CI. -->
+    <profile>
+      <id>local</id>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.wildfly.plugins</groupId>
+              <artifactId>wildfly-maven-plugin</artifactId>
+              <version>${wildfly.plugin.version}</version>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+    <!-- Coverage is opt-in: the pinned JaCoCo agent predates the local JDK. -->
+    <profile>
+      <id>coverage</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>prepare-agent</id>
+                <goals><goal>prepare-agent</goal></goals>
+              </execution>
+              <execution>
+                <id>report</id>
+                <phase>test</phase>
+                <goals><goal>report</goal></goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>

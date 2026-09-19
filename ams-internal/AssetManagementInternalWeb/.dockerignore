@@ -1,0 +1,5 @@
+# The WAR is the only build output the image needs.
+target/*
+!target/AssetManagementInternalWeb.war
+src/main/java
+src/test

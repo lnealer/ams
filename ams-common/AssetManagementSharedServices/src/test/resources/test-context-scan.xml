@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context.xsd">
+
+  <!--
+    Component scan for the integration tests.
+
+    The production wiring is annotation driven and lives in the web module's @Configuration
+    classes; this file exists so the DAO and service beans can be brought up without the web tier.
+    The scan deliberately covers the whole base package so that a newly added @Repository is
+    exercised by the integration tests without anyone having to remember to register it.
+  -->
+  <context:annotation-config/>
+  <context:component-scan base-package="org.example.am"/>
+
+  <!--
+    RestLogger is a plain collaborator rather than a stereotype-annotated bean, because the web
+    tier builds it alongside the RestTemplate; declared explicitly here so RestServiceImpl and
+    RestLoggingServiceImpl can be autowired in the tests.
+  -->
+  <bean id="restLogger" class="org.example.am.shared.utils.RestLogger"/>
+
+  <!-- Outbound calls are never made from the integration tests; the template is a real object
+       with no server behind it, so any accidental call fails fast rather than reaching a network. -->
+  <bean id="restTemplate" class="org.springframework.web.client.RestTemplate"/>
+
+</beans>

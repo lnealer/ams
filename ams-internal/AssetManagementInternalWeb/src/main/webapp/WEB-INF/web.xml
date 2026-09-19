@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+             http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+         version="3.1"
+         metadata-complete="false">
+
+  <display-name>AMS Internal Asset Management</display-name>
+
+  <!--
+    The whole bootstrap is here. There is no ServletContainerInitializer and no Spring Boot: the
+    container reads this file, builds the root context from RootConfig, and mounts the two
+    request paths - Struts on everything, Spring MVC on /ams/*.
+  -->
+
+  <context-param>
+    <param-name>contextClass</param-name>
+    <param-value>
+      org.springframework.web.context.support.AnnotationConfigWebApplicationContext
+    </param-value>
+  </context-param>
+  <context-param>
+    <param-name>contextConfigLocation</param-name>
+    <param-value>org.example.am.internal.web.config.RootConfig</param-value>
+  </context-param>
+
+  <!-- Log4j2 configuration lives on the classpath; named here so it is unambiguous. -->
+  <context-param>
+    <param-name>log4jConfiguration</param-name>
+    <param-value>classpath:log4j2.xml</param-value>
+  </context-param>
+
+  <listener>
+    <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+  </listener>
+  <listener>
+    <listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
+  </listener>
+  <!-- Issues the per-session AJAX token before the first page renders. -->
+  <listener>
+    <listener-class>org.example.am.internal.web.listener.AjaxTokenListener</listener-class>
+  </listener>
+  <listener>
+    <listener-class>org.example.am.internal.web.listener.ApplicationVersionListener</listener-class>
+  </listener>
+
+  <!--
+    Filter order matters and is the order of declaration.
+
+    Security runs first, so nothing downstream sees an unauthenticated request. Logging runs next,
+    so the user id is on the diagnostic context for everything that follows. The two static asset
+    filters are mapped only to the asset paths. Struts runs last, because it is the one that
+    actually serves the request.
+  -->
+
+  <filter>
+    <filter-name>springSecurityFilterChain</filter-name>
+    <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>springSecurityFilterChain</filter-name>
+    <url-pattern>/*</url-pattern>
+    <dispatcher>REQUEST</dispatcher>
+    <dispatcher>ERROR</dispatcher>
+  </filter-mapping>
+
+  <filter>
+    <filter-name>loggingFilter</filter-name>
+    <filter-class>org.example.am.internal.web.filter.LoggingFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>loggingFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <filter>
+    <filter-name>staticContentCacheFilter</filter-name>
+    <filter-class>
+      org.example.am.internal.web.filter.StaticContentCachingHeaderFilter
+    </filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>staticContentCacheFilter</filter-name>
+    <url-pattern>/js/*</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>staticContentCacheFilter</filter-name>
+    <url-pattern>/css/*</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>staticContentCacheFilter</filter-name>
+    <url-pattern>/images/*</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>staticContentCacheFilter</filter-name>
+    <url-pattern>/resources/*</url-pattern>
+  </filter-mapping>
+
+  <!-- Lets a browser revalidate an unchanged asset with a 304 instead of refetching it. -->
+  <filter>
+    <filter-name>etagFilter</filter-name>
+    <filter-class>org.springframework.web.filter.ShallowEtagHeaderFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>etagFilter</filter-name>
+    <url-pattern>/js/*</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>etagFilter</filter-name>
+    <url-pattern>/css/*</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>etagFilter</filter-name>
+    <url-pattern>/images/*</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>etagFilter</filter-name>
+    <url-pattern>/resources/*</url-pattern>
+  </filter-mapping>
+
+  <filter>
+    <filter-name>struts2</filter-name>
+    <filter-class>
+      org.apache.struts2.dispatcher.filter.StrutsPrepareAndExecuteFilter
+    </filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>struts2</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <!--
+    Spring MVC, mounted only at /ams/*. It hosts exactly one controller - the global error pages.
+    struts.action.excludePattern keeps the Struts filter from trying to resolve these.
+  -->
+  <servlet>
+    <servlet-name>ams</servlet-name>
+    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+    <init-param>
+      <param-name>contextClass</param-name>
+      <param-value>
+        org.springframework.web.context.support.AnnotationConfigWebApplicationContext
+      </param-value>
+    </init-param>
+    <init-param>
+      <param-name>contextConfigLocation</param-name>
+      <param-value>org.example.am.internal.web.config.ServletConfig</param-value>
+    </init-param>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ams</servlet-name>
+    <url-pattern>/ams/*</url-pattern>
+  </servlet-mapping>
+
+  <session-config>
+    <session-timeout>30</session-timeout>
+    <cookie-config>
+      <http-only>true</http-only>
+      <secure>true</secure>
+    </cookie-config>
+    <tracking-mode>COOKIE</tracking-mode>
+  </session-config>
+
+  <welcome-file-list>
+    <welcome-file>index.jsp</welcome-file>
+  </welcome-file-list>
+
+  <!--
+    404 and 405 go to a small page outside WEB-INF, because a request for a path that does not
+    exist has not been through the application and should not run a JSP that expects it to have.
+  -->
+  <error-page>
+    <error-code>404</error-code>
+    <location>/resources/pages/errorRedirect.jsp</location>
+  </error-page>
+  <error-page>
+    <error-code>405</error-code>
+    <location>/resources/pages/errorRedirect.jsp</location>
+  </error-page>
+  <error-page>
+    <error-code>500</error-code>
+    <location>/WEB-INF/global/customError.jsp</location>
+  </error-page>
+
+  <!-- The container's pool, configured in the Liberty server.xml. -->
+  <resource-ref>
+    <description>AMS internal Oracle data source</description>
+    <res-ref-name>jdbc/amsInternalDS</res-ref-name>
+    <res-type>javax.sql.DataSource</res-type>
+    <res-auth>Container</res-auth>
+    <res-sharing-scope>Shareable</res-sharing-scope>
+  </resource-ref>
+
+</web-app>

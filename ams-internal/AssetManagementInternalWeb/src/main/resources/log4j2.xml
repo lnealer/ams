@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Three destinations, for three audiences.
+
+  The rolling debug log is for whoever is investigating a problem. The alert log carries only
+  errors and is watched by the infrastructure alerting pipeline, so anything written there raises
+  a ticket - which is why it is a separate appender rather than a level filter on the main one.
+  The version log answers "which build is running", the first question on nearly every call.
+-->
+<Configuration status="WARN" monitorInterval="60">
+
+  <Properties>
+    <Property name="logDir">${sys:AppLogDir:-/logs}</Property>
+    <Property name="pattern">%d{ISO8601} AMS-INT %-5p [%l] %m%n</Property>
+  </Properties>
+
+  <Appenders>
+    <Console name="CONSOLE" target="SYSTEM_OUT">
+      <PatternLayout pattern="${pattern}"/>
+    </Console>
+
+    <RollingFile name="DEBUG_FILE"
+                 fileName="${logDir}/debug.log"
+                 filePattern="${logDir}/debug-%d{yyyy-MM-dd}-%i.log.gz">
+      <PatternLayout pattern="${pattern}"/>
+      <Policies>
+        <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+        <SizeBasedTriggeringPolicy size="100 MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="20">
+        <Delete basePath="${logDir}" maxDepth="1">
+          <IfFileName glob="debug-*.log.gz"/>
+          <IfLastModified age="90d"/>
+        </Delete>
+      </DefaultRolloverStrategy>
+    </RollingFile>
+
+    <RollingFile name="ALERT_FILE"
+                 fileName="${logDir}/alert.log"
+                 filePattern="${logDir}/alert-%d{yyyy-MM-dd}-%i.log.gz">
+      <PatternLayout pattern="${pattern}"/>
+      <Policies>
+        <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+        <SizeBasedTriggeringPolicy size="20 MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="20">
+        <Delete basePath="${logDir}" maxDepth="1">
+          <IfFileName glob="alert-*.log.gz"/>
+          <IfLastModified age="90d"/>
+        </Delete>
+      </DefaultRolloverStrategy>
+    </RollingFile>
+
+    <RollingFile name="VERSION_FILE"
+                 fileName="${logDir}/appVersion.log"
+                 filePattern="${logDir}/appVersion-%d{yyyy-MM-dd}.log">
+      <PatternLayout pattern="${pattern}"/>
+      <Policies>
+        <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+      </Policies>
+    </RollingFile>
+  </Appenders>
+
+  <Loggers>
+    <Logger name="org.example.am" level="debug" additivity="false">
+      <AppenderRef ref="CONSOLE"/>
+      <AppenderRef ref="DEBUG_FILE"/>
+    </Logger>
+
+    <!-- Errors only, and never anywhere else: every line here is a ticket. -->
+    <Logger name="ALERT_LOGGER" level="error" additivity="false">
+      <AppenderRef ref="ALERT_FILE"/>
+      <AppenderRef ref="CONSOLE"/>
+    </Logger>
+
+    <Logger name="APP_VERSION_LOGGER" level="info" additivity="false">
+      <AppenderRef ref="VERSION_FILE"/>
+      <AppenderRef ref="CONSOLE"/>
+    </Logger>
+
+    <!-- Frameworks are noisy at anything below warn and rarely tell us anything actionable. -->
+    <Logger name="org.springframework" level="warn"/>
+    <Logger name="com.opensymphony.xwork2" level="warn"/>
+    <Logger name="org.apache" level="warn"/>
+    <Logger name="freemarker.cache" level="warn"/>
+
+    <Root level="warn">
+      <AppenderRef ref="CONSOLE"/>
+      <AppenderRef ref="DEBUG_FILE"/>
+    </Root>
+  </Loggers>
+</Configuration>

@@ -1,0 +1,84 @@
+# Local stack: Oracle 23ai Free plus the Liberty application wired to it.
+#
+# The passwords below are development defaults and are meant to be visible - this file brings up a
+# throwaway local database. Real environments supply the same variables from their own secret
+# store; nothing here is baked into an image.
+#
+#   docker compose up -d oracle     just the database (first boot builds the schema, ~2 min)
+#   docker compose up --build       everything
+#   docker compose logs -f oracle   watch the schema build and the validation gate
+
+services:
+
+  oracle:
+    image: gvenzl/oracle-free:23-slim
+    container_name: ams-oracle
+    environment:
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD:-ams_sys_pw}
+      APP_USER: ${AMS_DB_USER:-ams}
+      APP_USER_PASSWORD: ${AMS_DB_PASSWORD:-ams_app_pw}
+      # Matched to the application's -Duser.timezone. SYSTIMESTAMP is TIMESTAMP WITH TIME ZONE and
+      # the procedures compare days with TRUNC, so a mismatch here shifts date comparisons by up to
+      # a day near midnight - wrong but plausible results rather than an error.
+      TZ: America/New_York
+      # Where 00_init.sh finds the object scripts; see the volumes below for why they are not
+      # alongside it.
+      AMS_SQL_DIR: /opt/ams/sql
+    ports:
+      - "1521:1521"
+    volumes:
+      # Two mounts, deliberately.
+      #
+      # The image's startup scan does NOT skip directories - it descends into them and runs every
+      # .sql it finds, as SYS and against the CDB root rather than FREEPDB1. With the whole tree
+      # mounted into that directory, all 70-odd scripts ran a second time in the wrong container
+      # as the wrong user, creating a shadow copy of the schema owned by SYS in the root.
+      #
+      # So only the launcher is exposed to the scan. The scripts it runs live outside that
+      # directory entirely, where nothing else can reach them, and AMS_SQL_DIR tells the launcher
+      # where to find them.
+      - ./db/oracle/00_init.sh:/container-entrypoint-initdb.d/00_init.sh:ro
+      - ./db/oracle:/opt/ams/sql:ro
+      - ams-oracle-data:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      # First boot has to create the schema and run the validation gate before it reports healthy.
+      start_period: 30s
+
+  app:
+    build:
+      context: ./ams-internal/AssetManagementInternalWeb
+      dockerfile: Dockerfile
+      # No Java 8 Liberty image is published for arm64 - IBM Java 8 was never built for it, and the
+      # OpenJ9 Liberty variants start at Java 11. Since the application targets Java 8 bytecode and
+      # server.xml pins the jdbc-4.1 feature, the Java version is kept and the architecture given
+      # up instead: on Apple Silicon this layer runs emulated. Slower to start, correct otherwise.
+      # Drop both platform lines on an amd64 host.
+      platforms:
+        - linux/amd64
+    platform: linux/amd64
+    container_name: ams-app
+    depends_on:
+      oracle:
+        condition: service_healthy
+    environment:
+      # The four variables bootstrap.properties already interpolates.
+      AMS_DATASOURCE_URL: jdbc:oracle:thin:@//oracle:1521/FREEPDB1
+      AMS_DATASOURCE_USER: ${AMS_DB_USER:-ams}
+      AMS_DATASOURCE_PASSWORD: ${AMS_DB_PASSWORD:-ams_app_pw}
+      KEYSTORE_PASSWORD: ${KEYSTORE_PASSWORD:-ams_keystore_pw}
+      # jvm.options pins the production profile, which registers the real WebSEAL header filter -
+      # correct for a deployment behind the proxy, but locally there is no proxy and every request
+      # would 403. This selects DevWebSealRequestHeaderAuthenticationFilter instead, and leaves the
+      # committed jvm.options production-correct.
+      JVM_ARGS: -Dspring.profiles.active=local
+      TZ: America/New_York
+    ports:
+      - "9081:9081"
+      - "9444:9444"
+
+volumes:
+  ams-oracle-data:

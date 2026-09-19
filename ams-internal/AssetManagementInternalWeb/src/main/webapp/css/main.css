@@ -1,0 +1,559 @@
+/*
+ * Internal Asset Management.
+ *
+ * An internal operations tool used all day by a small number of people, so this optimises for
+ * legibility and density over decoration. No build step - the file is served as written.
+ */
+
+:root {
+  --ams-text: #1c2027;
+  --ams-muted: #626d7d;
+  --ams-border: #d5dae1;
+  --ams-border-strong: #b6bfcb;
+  --ams-surface: #ffffff;
+  --ams-page: #f2f4f7;
+  --ams-accent: #14487a;
+  --ams-accent-dark: #0f3760;
+  --ams-accent-soft: #e8f0f8;
+  --ams-danger: #9c2323;
+  --ams-danger-soft: #fbeaea;
+  --ams-warning-bg: #fdf5dd;
+  --ams-warning-border: #d9ac3c;
+  --ams-success-bg: #e8f3e9;
+  --ams-success-border: #4a8f52;
+  --ams-attention-bg: #fff5e3;
+  --ams-radius: 4px;
+  --ams-shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ams-text);
+  background: var(--ams-page);
+}
+
+/* ---------------------------------------------------------------- chrome */
+
+/* Loud on purpose: acting on production data by mistake is the failure this prevents. */
+.ams-nonprod-banner {
+  background: var(--ams-warning-bg);
+  border-bottom: 2px solid var(--ams-warning-border);
+  padding: 0.4rem 1rem;
+  font-weight: 600;
+  font-size: 0.82rem;
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+
+.ams-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 1.5rem;
+  background: var(--ams-accent);
+  color: #fff;
+}
+
+.ams-brand {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.02rem;
+  letter-spacing: 0.01em;
+}
+.ams-brand:hover { text-decoration: underline; }
+
+.ams-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.82rem;
+}
+
+/* The customer an operator is acting for. Prominent because acting on the wrong one is the
+   easiest and most damaging mistake available on these screens. */
+.ams-current-customer {
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+  white-space: nowrap;
+}
+.ams-current-customer a { color: #fff; text-decoration: underline; }
+.ams-current-customer--none { background: transparent; border-style: dashed; opacity: 0.85; }
+
+.ams-user { opacity: 0.92; white-space: nowrap; }
+
+.ams-nav {
+  background: var(--ams-surface);
+  border-bottom: 1px solid var(--ams-border);
+  box-shadow: var(--ams-shadow);
+}
+.ams-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 0;
+  padding: 0 1.5rem;
+}
+.ams-nav a {
+  display: block;
+  padding: 0.65rem 0.95rem;
+  color: var(--ams-text);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  font-weight: 500;
+}
+.ams-nav a:hover { background: var(--ams-page); border-bottom-color: var(--ams-border-strong); }
+.ams-nav-nonprod a { color: var(--ams-danger); }
+
+/* ---------------------------------------------------------------- layout */
+
+.ams-content {
+  max-width: 1120px;
+  margin: 1.5rem auto;
+  padding: 1.5rem 1.75rem 1.75rem;
+  background: var(--ams-surface);
+  border: 1px solid var(--ams-border);
+  border-radius: var(--ams-radius);
+  box-shadow: var(--ams-shadow);
+}
+
+h1 {
+  font-size: 1.3rem;
+  margin: 0 0 1.1rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--ams-border);
+}
+h2 { font-size: 1.05rem; margin: 1.6rem 0 0.6rem; }
+h3 { font-size: 0.95rem; margin: 1.2rem 0 0.4rem; }
+
+/* ---------------------------------------------------------------- tables */
+
+.ams-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.8rem 0;
+  font-variant-numeric: tabular-nums;
+}
+.ams-table th,
+.ams-table td {
+  text-align: left;
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid var(--ams-border);
+  vertical-align: top;
+}
+.ams-table thead th {
+  background: var(--ams-page);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ams-muted);
+  border-bottom: 1px solid var(--ams-border-strong);
+  white-space: nowrap;
+}
+.ams-table tbody tr:hover { background: var(--ams-accent-soft); }
+
+.ams-row-attention { background: var(--ams-attention-bg); }
+.ams-row-error     { background: var(--ams-danger-soft); }
+.ams-row-warning   { background: var(--ams-warning-bg); }
+.ams-row-info      { background: var(--ams-page); }
+
+.ams-empty, .ams-muted { color: var(--ams-muted); font-style: italic; }
+
+/* Wide tables scroll inside their own box rather than pushing the page sideways. */
+.ams-table-scroll { overflow-x: auto; }
+
+/* ---------------------------------------------------------------- messages */
+
+.ams-errors, .ams-messages, .ams-warning, .ams-hint-panel {
+  padding: 0.65rem 0.9rem;
+  margin: 0.9rem 0;
+  border-radius: var(--ams-radius);
+  border: 1px solid;
+  border-left-width: 4px;
+}
+.ams-errors   { background: var(--ams-danger-soft);  border-color: var(--ams-danger); }
+.ams-messages { background: var(--ams-success-bg);   border-color: var(--ams-success-border); }
+.ams-warning  { background: var(--ams-warning-bg);   border-color: var(--ams-warning-border); }
+.ams-hint-panel { background: var(--ams-accent-soft); border-color: var(--ams-accent); }
+.ams-errors ul, .ams-messages ul { margin: 0; padding-left: 1.1rem; }
+
+.ams-danger-panel {
+  background: var(--ams-danger-soft);
+  border: 2px solid var(--ams-danger);
+  border-radius: var(--ams-radius);
+  padding: 0.8rem 1rem;
+  margin-bottom: 1.2rem;
+}
+.ams-danger-panel h2 { margin-top: 0; color: var(--ams-danger); }
+
+/* ---------------------------------------------------------------- detail lists */
+
+.ams-detail {
+  display: grid;
+  grid-template-columns: 13rem 1fr;
+  gap: 0.1rem 1rem;
+  margin: 0.9rem 0;
+}
+.ams-detail dt {
+  font-weight: 600;
+  color: var(--ams-muted);
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--ams-border);
+}
+.ams-detail dd {
+  margin: 0;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--ams-border);
+}
+
+.ams-address { font-family: inherit; margin: 0; white-space: pre-line; }
+.ams-address-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+/* ---------------------------------------------------------------- forms */
+
+fieldset {
+  border: 1px solid var(--ams-border);
+  border-radius: var(--ams-radius);
+  margin: 0 0 1.1rem;
+  padding: 0.9rem 1.1rem 1rem;
+}
+legend {
+  font-weight: 600;
+  padding: 0 0.4rem;
+  color: var(--ams-muted);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+label {
+  display: block;
+  margin: 0.7rem 0 0.2rem;
+  font-weight: 500;
+}
+label:first-of-type { margin-top: 0; }
+
+/*
+ * Struts renders a radio or checkbox list as bare <input><label> pairs with nothing around them.
+ * The block-level rule above would put every label on its own line, leaving each control floating
+ * above its text - which is exactly how the order type list first rendered. These rules put the
+ * control and its label back on one line and give each option its own row.
+ */
+fieldset input[type="radio"],
+fieldset input[type="checkbox"] {
+  margin: 0 0.45rem 0 0;
+  vertical-align: middle;
+  accent-color: var(--ams-accent);
+  width: 1rem;
+  height: 1rem;
+}
+fieldset input[type="radio"] + label,
+fieldset input[type="checkbox"] + label {
+  display: inline-block;
+  margin: 0;
+  font-weight: 400;
+  vertical-align: middle;
+  cursor: pointer;
+}
+/* Each control/label pair starts a new line without needing wrapper markup. */
+fieldset input[type="radio"],
+fieldset input[type="checkbox"] {
+  display: inline-block;
+}
+fieldset input[type="radio"] + label::after,
+fieldset input[type="checkbox"] + label::after {
+  content: "";
+  display: block;
+  height: 0.4rem;
+}
+fieldset br { display: none; }
+
+/* A label wrapping its own checkbox (hand-written forms) stays inline. */
+label > input[type="checkbox"],
+label > input[type="radio"] { margin-right: 0.45rem; }
+
+input[type="text"], input[type="date"], input[type="number"],
+input[type="password"], select, textarea {
+  padding: 0.42rem 0.55rem;
+  border: 1px solid var(--ams-border-strong);
+  border-radius: var(--ams-radius);
+  font: inherit;
+  color: inherit;
+  background: var(--ams-surface);
+  max-width: 100%;
+}
+input[type="text"]:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--ams-accent);
+  outline-offset: 1px;
+  border-color: var(--ams-accent);
+}
+textarea { resize: vertical; }
+
+/* ---------------------------------------------------------------- buttons */
+
+/*
+ * The type selector has to be in here, not just `button`. `input[type="submit"]` is more specific
+ * than a bare `.ams-primary` class, so a class-only rule loses the background fight and produces a
+ * white button with white text - invisible, which is how the Continue button first shipped.
+ */
+button,
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
+  padding: 0.45rem 1.1rem;
+  border: 1px solid var(--ams-border-strong);
+  border-radius: var(--ams-radius);
+  background: var(--ams-surface);
+  color: var(--ams-text);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  margin-right: 0.5rem;
+}
+button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover { background: var(--ams-page); }
+
+button:focus-visible,
+input[type="submit"]:focus-visible,
+input[type="button"]:focus-visible { outline: 2px solid var(--ams-accent); outline-offset: 2px; }
+
+button.ams-primary,
+input[type="submit"].ams-primary,
+input[type="button"].ams-primary {
+  background: var(--ams-accent);
+  border-color: var(--ams-accent);
+  color: #fff;
+}
+button.ams-primary:hover,
+input[type="submit"].ams-primary:hover { background: var(--ams-accent-dark); }
+
+button.ams-danger,
+input[type="submit"].ams-danger {
+  background: var(--ams-danger);
+  border-color: var(--ams-danger);
+  color: #fff;
+}
+button.ams-danger:hover,
+input[type="submit"].ams-danger:hover { filter: brightness(0.9); }
+
+.ams-actions-bar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--ams-border);
+}
+
+/* Struts renders each s:form as its own block; this keeps side-by-side forms on one row. */
+.ams-button-row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.ams-button-row form { margin: 0; }
+
+/* ---------------------------------------------------------------- search form */
+
+.ams-search-form {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  background: var(--ams-page);
+  border: 1px solid var(--ams-border);
+  border-radius: var(--ams-radius);
+  padding: 0.9rem 1rem;
+}
+.ams-search-form label { margin: 0 0 0.2rem; font-size: 0.82rem; color: var(--ams-muted); }
+.ams-search-form > * { margin: 0; }
+
+.ams-inline-form { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+.ams-inline-form label { margin: 0; font-weight: 400; }
+
+/* ---------------------------------------------------------------- misc */
+
+.ams-hint { color: var(--ams-muted); font-size: 0.84rem; margin: 0.3rem 0; }
+.ams-reference { font-size: 1.02rem; }
+.ams-result-count { color: var(--ams-muted); margin: 0 0 0.4rem; }
+
+.ams-badge {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.ams-badge--ok      { background: var(--ams-success-bg);  border-color: var(--ams-success-border); color: #245c2b; }
+.ams-badge--warn    { background: var(--ams-warning-bg);  border-color: var(--ams-warning-border); color: #6b5313; }
+.ams-badge--danger  { background: var(--ams-danger-soft); border-color: var(--ams-danger); color: var(--ams-danger); }
+.ams-badge--neutral { background: var(--ams-page);        border-color: var(--ams-border-strong); color: var(--ams-muted); }
+
+.ams-dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.ams-panel {
+  border: 1px solid var(--ams-border);
+  border-radius: var(--ams-radius);
+  padding: 0.9rem 1.1rem;
+  background: var(--ams-surface);
+}
+.ams-panel h2 { margin-top: 0; font-size: 0.95rem; }
+
+.ams-actions { list-style: none; padding: 0; margin: 0.5rem 0; }
+.ams-actions li {
+  display: inline-block;
+  margin: 0 0.4rem 0.4rem 0;
+  padding: 0.25rem 0.65rem;
+  background: var(--ams-accent-soft);
+  border: 1px solid var(--ams-accent);
+  border-radius: var(--ams-radius);
+  font-size: 0.85rem;
+}
+
+.ams-differences { margin: 0.5rem 0; padding-left: 1.2rem; }
+.ams-differences li { margin-bottom: 0.25rem; }
+.ams-resolution { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem; }
+
+.ams-footer {
+  max-width: 1120px;
+  margin: 0 auto 2rem;
+  padding: 0 1.75rem;
+  color: var(--ams-muted);
+  font-size: 0.78rem;
+}
+
+a { color: var(--ams-accent); }
+a:hover { color: var(--ams-accent-dark); }
+
+@media (max-width: 860px) {
+  .ams-dashboard, .ams-address-compare { grid-template-columns: 1fr; }
+  .ams-detail { grid-template-columns: 1fr; }
+  .ams-detail dt { border-bottom: none; padding-bottom: 0; }
+  .ams-content { margin: 0.75rem; padding: 1rem; }
+  .ams-header { flex-wrap: wrap; }
+}
+
+/* ---------------------------------------------------------------------------
+   The ordering flow
+   --------------------------------------------------------------------------- */
+
+/* Progress bar. A list rather than a row of divs so it still reads as an ordered
+   sequence of steps with styles off or to a screen reader. */
+.ams-steps {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  font-size: 0.82rem;
+}
+.ams-step {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem 0.3rem 0.45rem;
+  border: 1px solid var(--ams-border);
+  border-radius: 999px;
+  background: var(--ams-surface);
+  color: var(--ams-muted);
+}
+.ams-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  background: var(--ams-page);
+  border: 1px solid var(--ams-border);
+  font-size: 0.72rem;
+  font-weight: 600;
+  flex: none;
+}
+.ams-step--done { color: var(--ams-text); border-color: var(--ams-success-border); }
+.ams-step--done .ams-step-number {
+  background: var(--ams-success-bg);
+  border-color: var(--ams-success-border);
+}
+.ams-step--current {
+  color: #fff;
+  background: var(--ams-accent);
+  border-color: var(--ams-accent);
+  font-weight: 600;
+}
+.ams-step--current .ams-step-number {
+  background: #fff;
+  color: var(--ams-accent);
+  border-color: #fff;
+}
+.ams-step--current a, .ams-step--current { text-decoration: none; }
+.ams-step a { color: inherit; }
+
+/* Two-column form layout that collapses to one on a narrow screen. Struts emits bare
+   <label><input> pairs, so the wrapper div is what gives each field its own cell. */
+.ams-field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.65rem 1.25rem;
+}
+.ams-field { display: flex; flex-direction: column; }
+.ams-field label { font-weight: 600; font-size: 0.82rem; margin-bottom: 0.2rem; }
+
+/* A checkbox and its label belong on one line. Without this the global label{display:block}
+   puts the box above its own text. */
+.ams-check { display: flex; align-items: center; gap: 0.4rem; margin: 0.4rem 0; }
+.ams-check label { display: inline-block; font-weight: 400; margin: 0; }
+
+/* The subscriber PC grid. Inputs are sized by the column rather than by the size attribute so
+   the table does not stretch past the page on a narrow screen. */
+.ams-grid input[type="text"], .ams-grid select { width: 100%; box-sizing: border-box; }
+.ams-grid td { vertical-align: top; }
+.ams-grid-index { color: var(--ams-muted); text-align: right; width: 2rem; }
+.ams-grid-check { text-align: center; }
+
+/* Keeps the buttons on one line and away from the last field above them. */
+.ams-button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1.25rem;
+}
+
+@media (max-width: 860px) {
+  .ams-field-grid { grid-template-columns: 1fr; }
+}
+
+/* Values the application filled in, and why. Deliberately not styled as an error or a warning:
+   nothing is wrong, but every line is a starting point the operator is expected to check. */
+.ams-suggested {
+  border-left: 3px solid #0d5c63;
+  background: #f0f6f6;
+  padding: 0.75rem 1rem;
+  margin: 0 0 1.25rem;
+  border-radius: 0 3px 3px 0;
+}
+.ams-suggested-head {
+  margin: 0 0 0.4rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #0d5c63;
+}
+.ams-suggested ul { margin: 0; padding-left: 1.1rem; }
+.ams-suggested li { margin: 0.2rem 0; font-size: 0.9rem; line-height: 1.45; }
+
+/* A field being mirrored from another contact: readable, clearly not independently editable. */
+input[readonly] { background: #f2f4f4; color: #40504f; cursor: not-allowed; }

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.example.ams</groupId>
+    <artifactId>ams-internal</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>AssetManagementInternalCommon</artifactId>
+  <packaging>jar</packaging>
+  <name>Asset Management Internal Common</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.example.ams</groupId>
+      <artifactId>AssetManagementSharedCommon</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+    </dependency>
+    <!--
+      The authenticated principal types live here rather than in the web module so that both the
+      web tier and the services that resolve roles can see them without the services having to
+      depend on the WAR.
+    -->
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-core</artifactId>
+    </dependency>
+  </dependencies>
+</project>

@@ -1,0 +1,17 @@
+# Where Log4j2 writes; referenced as ${sys:AppLogDir} in log4j2.xml.
+-DAppLogDir=/logs
+
+# Chooses the security wiring: 'production' and 'qa' register the real WebSEAL header filter,
+# 'local', 'dev' and 'fit' register the developer stub. Overridden per environment at deploy time.
+-Dspring.profiles.active=production
+
+-Djava.awt.headless=true
+-Dfile.encoding=UTF-8
+-Duser.timezone=America/New_York
+
+# Heap sized for the container's memory limit rather than the host's.
+-XX:+UseContainerSupport
+-XX:MaxRAMPercentage=75.0
+
+# Fail fast on an out of memory condition rather than limping on in a state nothing can trust.
+-XX:+ExitOnOutOfMemoryError
