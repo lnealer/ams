@@ -1,10 +1,9 @@
 package org.example.am.internal.web.action;
 
+import org.apache.struts2.Action;
 import org.example.am.shared.logging.LoggingConstants;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import com.opensymphony.xwork2.Action;
 
 /**
  * The Struts side's global error page.
