@@ -1,5 +1,6 @@
 package org.example.am.internal.web.action;
 
+import org.apache.struts2.Action;
 import org.example.am.internal.security.SecurityRoleType;
 import org.example.am.internal.web.model.CancelModel;
 import org.example.am.shared.domain.Order;
@@ -9,8 +10,6 @@ import org.example.am.shared.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import com.opensymphony.xwork2.Action;
 
 /**
  * Cancels an order or an in-flight configuration change.

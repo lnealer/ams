@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.Action;
 import org.example.am.internal.security.SecurityRoleType;
 import org.example.am.shared.domain.ETLStatus;
 import org.example.am.shared.service.AdministrationService;

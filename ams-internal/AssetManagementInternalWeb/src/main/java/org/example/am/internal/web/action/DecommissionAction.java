@@ -1,5 +1,6 @@
 package org.example.am.internal.web.action;
 
+import org.apache.struts2.Action;
 import org.example.am.internal.security.SecurityRoleType;
 import org.example.am.internal.service.CalendarService;
 import org.example.am.internal.web.model.DecommissionModel;
@@ -8,8 +9,6 @@ import org.example.am.shared.service.AssetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import com.opensymphony.xwork2.Action;
 
 /**
  * Schedules and cancels the removal of an asset from service.
