@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE struts PUBLIC
-    "-//Apache Software Foundation//DTD Struts Configuration 6.0//EN"
-    "https://struts.apache.org/dtds/struts-6.0.dtd">
+    "-//Apache Software Foundation//DTD Struts Configuration 6.5//EN"
+    "https://struts.apache.org/dtds/struts-6.5.dtd">
 <struts>
 
   <!--
@@ -36,6 +36,15 @@
 
   <constant name="struts.multipart.maxSize" value="10485760"/>
   <constant name="struts.ui.theme" value="simple"/>
+
+  <!--
+    Struts 7 routing defaults changed. These constants preserve the pre-7 behavior:
+    - struts.mapper.alwaysSelectFullNamespace now defaults to true (was false)
+    - struts.actionConfig.fallbackToEmptyNamespace now defaults to false (was true)
+    TODO(migration): Evaluate adopting the new defaults in a future release.
+  -->
+  <constant name="struts.mapper.alwaysSelectFullNamespace" value="false"/>
+  <constant name="struts.actionConfig.fallbackToEmptyNamespace" value="true"/>
 
   <package name="AssetManagementInternalWeb" extends="json-default" abstract="true">
 
