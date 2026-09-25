@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.struts2.interceptor.AbstractInterceptor;
 import org.example.am.internal.utils.InternalConstants;
 import org.example.am.internal.web.model.OrderModel;
 import org.example.am.shared.domain.Address;
@@ -20,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.opensymphony.xwork2.Action;
 import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.ModelDriven;
-import com.opensymphony.xwork2.interceptor.AbstractInterceptor;
 import com.opensymphony.xwork2.interceptor.PreResultListener;
 
 /**

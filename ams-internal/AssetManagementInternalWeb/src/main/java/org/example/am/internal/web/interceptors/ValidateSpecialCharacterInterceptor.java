@@ -6,12 +6,12 @@ import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.interceptor.AbstractInterceptor;
 import org.example.am.internal.utils.InternalConstants;
 
 import com.opensymphony.xwork2.Action;
 import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.ActionSupport;
-import com.opensymphony.xwork2.interceptor.AbstractInterceptor;
 
 /**
  * Rejects any request parameter containing a character outside the accepted set.
