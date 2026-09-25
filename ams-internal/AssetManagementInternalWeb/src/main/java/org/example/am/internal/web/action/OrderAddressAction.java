@@ -2,6 +2,7 @@ package org.example.am.internal.web.action;
 
 import java.util.Collection;
 
+import org.apache.struts2.Action;
 import org.example.am.internal.security.SecurityRoleType;
 import org.example.am.internal.web.model.OrderModel;
 import org.example.am.shared.domain.Address;
@@ -9,8 +10,6 @@ import org.example.am.shared.domain.CountryType;
 import org.example.am.shared.domain.StateType;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import com.opensymphony.xwork2.Action;
 
 /**
  * Step 2 of the ordering flow: where the hardware goes.

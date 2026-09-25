@@ -3,6 +3,7 @@ package org.example.am.internal.web.action;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.struts2.Action;
 import org.example.am.internal.security.AmsUser;
 import org.example.am.internal.security.SecurityRoleType;
 import org.example.am.internal.security.WebSealPrincipal;
@@ -15,8 +16,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.stereotype.Component;
-
-import com.opensymphony.xwork2.Action;
 
 /**
  * Lets a tester swap their own directory groups and move the application's clock.

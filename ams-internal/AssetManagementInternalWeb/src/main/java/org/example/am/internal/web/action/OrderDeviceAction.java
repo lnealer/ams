@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TimeZone;
 
+import org.apache.struts2.Action;
 import org.example.am.internal.security.SecurityRoleType;
 import org.example.am.internal.web.model.OrderModel;
 import org.example.am.shared.domain.DayType;
@@ -12,8 +13,6 @@ import org.example.am.shared.domain.HourType;
 import org.example.am.shared.domain.MaintenanceWindow;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import com.opensymphony.xwork2.Action;
 
 /**
  * Step 3 of the ordering flow: what to call the device, and when it may be disturbed.
