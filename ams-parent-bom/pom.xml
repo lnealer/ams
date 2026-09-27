@@ -30,7 +30,7 @@
     <log4j2.version>2.26.0</log4j2.version>
     <jackson.version>2.20.2</jackson.version>
 
-    <servlet-api.version>3.1.0</servlet-api.version>
+    <jakarta-servlet-api.version>6.0.0</jakarta-servlet-api.version>
     <jstl.version>1.2</jstl.version>
     <jakarta-annotation.version>2.1.1</jakarta-annotation.version>
 
@@ -198,7 +198,7 @@
       <dependency>
         <groupId>jakarta.servlet</groupId>
         <artifactId>jakarta.servlet-api</artifactId>
-        <version>${servlet-api.version}</version>
+        <version>${jakarta-servlet-api.version}</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
@@ -209,8 +209,8 @@
       </dependency>
       <!--
         The JSR-250 security annotations. Liberty provides these at runtime, so the scope is
-        provided - but @EnableGlobalMethodSecurity(jsr250Enabled = true) needs them on the compile
-        and test classpath, or the security configuration cannot be built outside the container.
+        provided - but @EnableMethodSecurity needs them on the compile and test classpath, or the
+        security configuration cannot be built outside the container.
       -->
       <dependency>
         <groupId>jakarta.annotation</groupId>
@@ -310,6 +310,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.4</version>
         <configuration>
           <!--
             Java 21 requires opening java.lang for the pinned Mockito to work.
