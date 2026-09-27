@@ -3,8 +3,8 @@ package org.example.am.shared.service.impl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
@@ -49,19 +49,19 @@ public class OrderDefaultsServiceImplTest {
 
     /** Stubbed in each test rather than in setUp, so unused stubs are not left lying around. */
     private void stubProperties() {
-        lenient().when(configService.getString(eq(PropertyType.DEFAULT_PRIMARY_DNS), anyString()))
+        lenient().when(configService.getString(eq(PropertyType.DEFAULT_PRIMARY_DNS), any()))
                 .thenReturn("9.9.9.9");
-        lenient().when(configService.getString(eq(PropertyType.DEFAULT_SECONDARY_DNS), anyString()))
+        lenient().when(configService.getString(eq(PropertyType.DEFAULT_SECONDARY_DNS), any()))
                 .thenReturn("149.112.112.112");
-        lenient().when(configService.getString(eq(PropertyType.LAN_SUGGESTION_BLOCK), anyString()))
+        lenient().when(configService.getString(eq(PropertyType.LAN_SUGGESTION_BLOCK), any()))
                 .thenReturn("192.168.0.0");
         lenient().when(configService.getInt(eq(PropertyType.DEFAULT_BANDWIDTH_KBPS), anyInt()))
                 .thenReturn(100000);
         lenient().when(configService.getInt(eq(PropertyType.SUBSCRIBER_STATIC_START), anyInt()))
                 .thenReturn(11);
-        lenient().when(configService.getString(eq(PropertyType.DEFAULT_WAN_SUBNET), anyString()))
+        lenient().when(configService.getString(eq(PropertyType.DEFAULT_WAN_SUBNET), any()))
                 .thenReturn("198.51.45.0");
-        lenient().when(configService.getString(eq(PropertyType.DEFAULT_WAN_MASK), anyString()))
+        lenient().when(configService.getString(eq(PropertyType.DEFAULT_WAN_MASK), any()))
                 .thenReturn("255.255.255.0");
     }
 
@@ -135,7 +135,7 @@ public class OrderDefaultsServiceImplTest {
     @Test
     public void withNoPoolConfiguredTheWanIsLeftForTheOperator() {
         stubProperties();
-        lenient().when(configService.getString(eq(PropertyType.DEFAULT_WAN_SUBNET), anyString()))
+        lenient().when(configService.getString(eq(PropertyType.DEFAULT_WAN_SUBNET), any()))
                 .thenReturn(null);
         lenient().when(assetConfigDAO.getConfigurationsForCustomer(CUSTOMER_ID))
                 .thenReturn(Collections.<AssetConfiguration>emptyList());

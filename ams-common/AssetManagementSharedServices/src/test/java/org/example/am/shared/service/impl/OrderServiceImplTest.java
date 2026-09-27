@@ -208,8 +208,8 @@ public class OrderServiceImplTest {
                 eq(7777L), eq("junit"));
         verify(subscriberPcDAO).replaceSubscriberPcs(any(java.util.List.class),
                 eq(7777L), eq("junit"));
-        verify(orderDAO).linkOrderArtifacts(eq(7777L), any(Long.class), any(Long.class),
-                any(Long.class), eq("junit"));
+        verify(orderDAO).linkOrderArtifacts(eq(7777L), any(), any(),
+                any(), eq("junit"));
     }
 
     /**
@@ -237,7 +237,7 @@ public class OrderServiceImplTest {
 
         orderService.submitOrder(order, "junit");
 
-        verify(orderDAO).linkOrderArtifacts(eq(7777L), any(Long.class), any(Long.class),
+        verify(orderDAO).linkOrderArtifacts(eq(7777L), any(), any(),
                 eq(Long.valueOf(9705L)), eq("junit"));
     }
 
@@ -257,7 +257,7 @@ public class OrderServiceImplTest {
 
         assertEquals(7777L, orderId);
         assertNull(order.getShippingWindowTimeslotId());
-        verify(orderDAO).linkOrderArtifacts(eq(7777L), any(Long.class), any(Long.class),
+        verify(orderDAO).linkOrderArtifacts(eq(7777L), any(), any(),
                 eq((Long) null), eq("junit"));
     }
 
