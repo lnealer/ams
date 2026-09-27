@@ -13,6 +13,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 import org.springframework.web.servlet.view.JstlView;
+import org.springframework.web.util.pattern.PathPatternParser;
 
 /**
  * The {@code DispatcherServlet} context, mounted at {@code /ams/*}.
@@ -78,11 +79,11 @@ public class ServletConfig implements WebMvcConfigurer {
     }
 
     /**
-     * Keeps the legacy {@code AntPathMatcher} URL matching.
+     * Keeps the legacy {@code AntPathMatcher} URL matching for .action suffix support.
      *
-     * <p>Spring 5.3 switched the default to {@code PathPatternParser}, which does not do
+     * <p>Spring 6 switched to {@code PathPatternParser} by default, which does not do
      * suffix pattern matching. Every mapping in this application predates that change, so the
-     * parser is explicitly cleared to fall back to the old matcher. Remove this only together with
+     * parser is explicitly set to null to fall back to the old matcher. Remove this only together with
      * the {@code .action} suffixes themselves.</p>
      */
     @Override
