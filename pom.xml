@@ -1,0 +1,19 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://w3.org"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://apache.org">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example.ams</groupId>
+    <artifactId>ams-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>AMS Parent</name>
+
+    <modules>
+        <module>ams-parent-pom</module>
+        <module>ams-common</module>
+        <module>ams-internal</module>
+    </modules>
+
+
+</project>
