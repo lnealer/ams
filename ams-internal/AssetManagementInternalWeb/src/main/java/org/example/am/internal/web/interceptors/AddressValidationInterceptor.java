@@ -4,6 +4,8 @@ import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.struts2.interceptor.AbstractInterceptor;
+import org.apache.struts2.interceptor.PreResultListener;
 import org.example.am.internal.utils.InternalConstants;
 import org.example.am.internal.web.model.OrderModel;
 import org.example.am.shared.domain.Address;
@@ -17,11 +19,7 @@ import org.example.am.shared.service.ConfigService;
 import org.example.am.shared.service.RestService;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.opensymphony.xwork2.Action;
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.ModelDriven;
-import com.opensymphony.xwork2.interceptor.AbstractInterceptor;
-import com.opensymphony.xwork2.interceptor.PreResultListener;
+import org.apache.struts2.dispatcher.ActionInvocation;
 
 /**
  * Validates the shipping address on the way into the order review screen.
@@ -74,7 +72,7 @@ public class AddressValidationInterceptor extends AbstractInterceptor {
     private String validate(final ActionInvocation invocation, final String resultCode) {
         // Only a successful action is second-guessed. If it returned INPUT the user has a form
         // error to fix, and replacing that with an address suggestion would hide it.
-        if (!Action.SUCCESS.equals(resultCode)) {
+        if (!"success".equals(resultCode)) {
             return null;
         }
         final OrderModel model = getModel(invocation);
@@ -143,10 +141,10 @@ public class AddressValidationInterceptor extends AbstractInterceptor {
     @SuppressWarnings("unchecked")
     private static OrderModel getModel(final ActionInvocation invocation) {
         final Object action = invocation.getAction();
-        if (!(action instanceof ModelDriven)) {
+        if (!(action instanceof org.apache.struts2.dispatcher.ModelDriven)) {
             return null;
         }
-        final Object model = ((ModelDriven<Object>) action).getModel();
+        final Object model = ((org.apache.struts2.dispatcher.ModelDriven<Object>) action).getModel();
         return model instanceof OrderModel ? (OrderModel) model : null;
     }
 

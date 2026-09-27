@@ -6,12 +6,9 @@ import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.interceptor.AbstractInterceptor;
+import org.apache.struts2.dispatcher.ActionInvocation;
 import org.example.am.internal.utils.InternalConstants;
-
-import com.opensymphony.xwork2.Action;
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.ActionSupport;
-import com.opensymphony.xwork2.interceptor.AbstractInterceptor;
 
 /**
  * Rejects any request parameter containing a character outside the accepted set.
@@ -110,11 +107,11 @@ public class ValidateSpecialCharacterInterceptor extends AbstractInterceptor {
         LOGGER.warn("Rejected request to {}: parameter '{}' contains unaccepted characters",
                 invocation.getProxy().getActionName(), parameterName);
         final Object action = invocation.getAction();
-        if (action instanceof ActionSupport) {
-            ((ActionSupport) action).addActionError(
+        if (action instanceof org.apache.struts2.dispatcher.ActionSupport) {
+            ((org.apache.struts2.dispatcher.ActionSupport) action).addActionError(
                     "The value supplied for '" + parameterName + "' contains characters that are"
                     + " not accepted. Please remove them and try again.");
         }
-        return Action.INPUT;
+        return "input";
     }
 }
