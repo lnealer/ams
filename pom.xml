@@ -10,7 +10,7 @@
     <name>AMS Parent</name>
 
     <modules>
-        <module>ams-parent-pom</module>
+        <module>ams-parent-bom</module>
         <module>ams-common</module>
         <module>ams-internal</module>
     </modules>
