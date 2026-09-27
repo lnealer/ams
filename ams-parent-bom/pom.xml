@@ -12,8 +12,7 @@
   <description>Parent POM and dependency BOM for the AMS Internal Asset Management platform.</description>
 
   <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
@@ -45,12 +44,14 @@
     <json-lib.version>2.4</json-lib.version>
     <ezmorph.version>1.0.6</ezmorph.version>
 
-    <h2.version>1.3.176</h2.version>
-    <aspectj.version>1.7.4</aspectj.version>
-    <junit.version>4.12</junit.version>
-    <mockito.version>1.9.5</mockito.version>
+    <h2.version>2.2.224</h2.version>
+    <aspectj.version>1.9.22</aspectj.version>
+    <junit.version>4.13.2</junit.version>
+    <mockito.version>4.11.0</mockito.version>
 
-    <jacoco.plugin.version>0.8.5</jacoco.plugin.version>
+    <jacoco.plugin.version>0.8.11</jacoco.plugin.version>
+    <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
+    <maven.surefire.plugin.version>3.2.5</maven.surefire.plugin.version>
 
     <!--
       The packaging plugins are the one place the original pinned versions could not be kept.
@@ -289,7 +290,7 @@
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
-        <artifactId>mockito-all</artifactId>
+        <artifactId>mockito-core</artifactId>
         <version>${mockito.version}</version>
         <scope>test</scope>
       </dependency>
@@ -320,7 +321,7 @@
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
-      <artifactId>mockito-all</artifactId>
+      <artifactId>mockito-core</artifactId>
     </dependency>
   </dependencies>
 
@@ -328,13 +329,20 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven.compiler.plugin.version}</version>
+        <configuration>
+          <release>21</release>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven.surefire.plugin.version}</version>
         <configuration>
           <!--
-            The pinned Mockito bundles a cglib that predates the module system and generates its
-            proxies by calling ClassLoader.defineClass reflectively. Opening java.lang keeps the
-            pinned test stack working on a modular JDK; it is a test-time concern only and has no
-            effect on what is packaged.
+            Java 21 requires explicit module opens for reflective access used by test frameworks.
+            This allows Mockito and other test libraries to function properly.
           -->
           <argLine>--add-opens java.base/java.lang=ALL-UNNAMED</argLine>
         </configuration>
