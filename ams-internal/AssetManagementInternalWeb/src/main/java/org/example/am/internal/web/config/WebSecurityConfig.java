@@ -96,13 +96,13 @@ public class WebSecurityConfig {
                 .expiredUrl("/ams/invalidSessionError"))
             .headers(headers -> headers
                 .frameOptions(frameOptions -> frameOptions.sameOrigin())
-                .xssProtection()
-                .contentTypeOptions()
                 .httpStrictTransportSecurity()
                     .includeSubDomains(true)
                 .and()
                 .cacheControl()
                 .and()
+                .addHeaderWriter(new StaticHeadersWriter("X-Content-Type-Options", "nosniff"))
+                .addHeaderWriter(new StaticHeadersWriter("X-XSS-Protection", "1; mode=block"))
                 .addHeaderWriter(new StaticHeadersWriter("Content-Security-Policy",
                         CONTENT_SECURITY_POLICY)));
         return http.build();

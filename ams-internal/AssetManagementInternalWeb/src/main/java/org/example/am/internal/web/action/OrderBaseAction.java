@@ -6,6 +6,8 @@ import org.example.am.shared.domain.Address;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import jakarta.servlet.http.HttpSession;
+
 /**
  * Shared behaviour for the steps of the ordering flow.
  *
@@ -26,7 +28,7 @@ public abstract class OrderBaseAction extends BaseAction {
      */
     @Override
     public OrderModel getModel() {
-        final javax.servlet.http.HttpSession session = getOrCreateSession();
+        final HttpSession session = getOrCreateSession();
         OrderModel model = (OrderModel) session.getAttribute(InternalConstants.SESSION_ORDER_MODEL);
         if (model == null) {
             model = new OrderModel();
@@ -45,7 +47,7 @@ public abstract class OrderBaseAction extends BaseAction {
      * to the ordering screens starts cleanly rather than resuming a finished order.
      */
     protected void clearModel() {
-        final javax.servlet.http.HttpSession session = getSession();
+        final HttpSession session = getSession();
         if (session != null) {
             session.removeAttribute(InternalConstants.SESSION_ORDER_MODEL);
         }

@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 import java.util.Collection;
 import org.example.am.shared.domain.NetworkChangeRequestType;
 
+import jakarta.servlet.http.HttpSession;
+
 /**
  * Raises a network change request.
  */
@@ -35,7 +37,7 @@ public class NetworkChangeRequestAction extends BaseAction {
 
     /** The in-progress request lives in the session, like the ordering flow's model. */
     protected NetworkChangeRequestModel getRequestModel() {
-        final javax.servlet.http.HttpSession session = getOrCreateSession();
+        final HttpSession session = getOrCreateSession();
         NetworkChangeRequestModel model = (NetworkChangeRequestModel)
                 session.getAttribute(InternalConstants.SESSION_NCR_MODEL);
         if (model == null) {
@@ -50,7 +52,7 @@ public class NetworkChangeRequestAction extends BaseAction {
     }
 
     protected void clearRequestModel() {
-        final javax.servlet.http.HttpSession session = getSession();
+        final HttpSession session = getSession();
         if (session != null) {
             session.removeAttribute(InternalConstants.SESSION_NCR_MODEL);
         }
