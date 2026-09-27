@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -108,10 +109,10 @@ public class OrderServiceImplTest {
         order.setOrderStatusType(OrderStatusType.SUBMITTED);
         order.setCustomerId(Long.valueOf(CUSTOMER_ID));
 
-        when(configService.getInt(
+        lenient().when(configService.getInt(
                 eq(PropertyType.MIN_HOURS_BEFORE_INSTALLATION_TO_CANCEL_ORDER_WITHOUT_PENALTY),
                 any(Integer.class))).thenReturn(Integer.valueOf(48));
-        when(orderDAO.getOrder(CUSTOMER_ID, ORDER_ID)).thenReturn(order);
+        lenient().when(orderDAO.getOrder(CUSTOMER_ID, ORDER_ID)).thenReturn(order);
     }
 
     private static Date hoursFromNow(final int hours) {

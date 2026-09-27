@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -48,19 +49,19 @@ public class OrderDefaultsServiceImplTest {
 
     /** Stubbed in each test rather than in setUp, so unused stubs are not left lying around. */
     private void stubProperties() {
-        when(configService.getString(eq(PropertyType.DEFAULT_PRIMARY_DNS), anyString()))
+        lenient().when(configService.getString(eq(PropertyType.DEFAULT_PRIMARY_DNS), anyString()))
                 .thenReturn("9.9.9.9");
-        when(configService.getString(eq(PropertyType.DEFAULT_SECONDARY_DNS), anyString()))
+        lenient().when(configService.getString(eq(PropertyType.DEFAULT_SECONDARY_DNS), anyString()))
                 .thenReturn("149.112.112.112");
-        when(configService.getString(eq(PropertyType.LAN_SUGGESTION_BLOCK), anyString()))
+        lenient().when(configService.getString(eq(PropertyType.LAN_SUGGESTION_BLOCK), anyString()))
                 .thenReturn("192.168.0.0");
-        when(configService.getInt(eq(PropertyType.DEFAULT_BANDWIDTH_KBPS), anyInt()))
+        lenient().when(configService.getInt(eq(PropertyType.DEFAULT_BANDWIDTH_KBPS), anyInt()))
                 .thenReturn(100000);
-        when(configService.getInt(eq(PropertyType.SUBSCRIBER_STATIC_START), anyInt()))
+        lenient().when(configService.getInt(eq(PropertyType.SUBSCRIBER_STATIC_START), anyInt()))
                 .thenReturn(11);
-        when(configService.getString(eq(PropertyType.DEFAULT_WAN_SUBNET), anyString()))
+        lenient().when(configService.getString(eq(PropertyType.DEFAULT_WAN_SUBNET), anyString()))
                 .thenReturn("198.51.45.0");
-        when(configService.getString(eq(PropertyType.DEFAULT_WAN_MASK), anyString()))
+        lenient().when(configService.getString(eq(PropertyType.DEFAULT_WAN_MASK), anyString()))
                 .thenReturn("255.255.255.0");
     }
 
