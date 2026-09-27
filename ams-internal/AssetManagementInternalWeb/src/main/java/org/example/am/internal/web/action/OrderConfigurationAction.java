@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.struts2.Action;
 import org.example.am.internal.security.SecurityRoleType;
 import org.example.am.internal.web.model.OrderModel;
 import org.example.am.network.validation.LanTypeAValidator;
@@ -19,8 +20,6 @@ import org.example.am.shared.service.OrderDefaultsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import com.opensymphony.xwork2.Action;
 
 /**
  * Step 4 of the ordering flow: the external configuration, WAN and LAN.

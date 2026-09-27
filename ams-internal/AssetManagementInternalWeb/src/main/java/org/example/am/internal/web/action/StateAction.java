@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.Action;
 import org.example.am.shared.domain.CountryType;
 import org.example.am.shared.domain.StateType;
 import org.example.am.shared.domain.comparator.CountryComparator;

@@ -2,7 +2,7 @@ package org.example.am.internal.web.action;
 
 import java.util.Date;
 
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.Action;
 import org.example.am.internal.security.SecurityRoleType;
 import org.example.am.internal.service.CalendarService;
 import org.example.am.shared.domain.NetworkChangeRequest;

@@ -1,6 +1,6 @@
 package org.example.am.internal.web.action;
 
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.Action;
 import org.example.am.internal.security.SecurityRoleType;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;

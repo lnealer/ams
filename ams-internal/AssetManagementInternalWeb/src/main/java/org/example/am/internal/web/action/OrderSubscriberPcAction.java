@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.apache.struts2.Action;
 import org.example.am.internal.security.SecurityRoleType;
 import org.example.am.internal.web.model.OrderModel;
 import org.example.am.network.validation.NetworkUtils;
@@ -17,8 +18,6 @@ import org.example.am.shared.service.OrderDefaultsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import com.opensymphony.xwork2.Action;
 
 /**
  * Step 5 of the ordering flow: the machines that will sit behind the device.

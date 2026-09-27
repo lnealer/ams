@@ -3,6 +3,7 @@ package org.example.am.internal.web.action;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.struts2.Action;
 import org.example.am.internal.security.SecurityRoleType;
 import org.example.am.internal.service.CustomerService;
 import org.example.am.internal.web.model.AssetGridRow;
@@ -15,8 +16,6 @@ import org.example.am.shared.utils.CommonConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import com.opensymphony.xwork2.Action;
 
 /**
  * The asset search screen.
