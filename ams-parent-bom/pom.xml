@@ -12,28 +12,28 @@
   <description>Parent POM and dependency BOM for the AMS Internal Asset Management platform.</description>
 
   <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
     <ams.version>1.0.0-SNAPSHOT</ams.version>
 
-    <struts2.version>6.8.0</struts2.version>
+    <struts2.version>7.3.0</struts2.version>
     <ognl.version>3.3.5</ognl.version>
     <commons-text.version>1.12.0</commons-text.version>
     <freemarker.version>2.3.33</freemarker.version>
 
-    <spring.version>5.3.39</spring.version>
-    <spring-security.version>5.3.13.RELEASE</spring-security.version>
+    <spring.version>6.2.0</spring.version>
+    <spring-security.version>6.3.0</spring-security.version>
     <spring-security-oauth2.version>2.5.2.RELEASE</spring-security-oauth2.version>
 
     <log4j2.version>2.26.0</log4j2.version>
     <jackson.version>2.20.2</jackson.version>
 
-    <servlet-api.version>3.1.0</servlet-api.version>
-    <jstl.version>1.2</jstl.version>
-    <javax-annotation.version>1.3.2</javax-annotation.version>
+    <servlet-api.version>6.0.0</servlet-api.version>
+    <jstl.version>3.0.1</jstl.version>
+    <jakarta-annotation.version>2.1.1</jakarta-annotation.version>
 
     <ojdbc8.version>12.2.0.1</ojdbc8.version>
 
@@ -213,28 +213,28 @@
         <version>${ezmorph.version}</version>
       </dependency>
 
-      <!-- ==================== Java EE web ==================== -->
+      <!-- ==================== Jakarta EE web ==================== -->
       <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
+        <groupId>jakarta.servlet</groupId>
+        <artifactId>jakarta.servlet-api</artifactId>
         <version>${servlet-api.version}</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
-        <groupId>jstl</groupId>
-        <artifactId>jstl</artifactId>
+        <groupId>jakarta.servlet.jsp.jstl</groupId>
+        <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
         <version>${jstl.version}</version>
         <scope>runtime</scope>
       </dependency>
       <!--
-        The JSR-250 security annotations. Liberty provides these at runtime, so the scope is
+        The Jakarta EE security annotations. Liberty provides these at runtime, so the scope is
         provided - but @EnableGlobalMethodSecurity(jsr250Enabled = true) needs them on the compile
         and test classpath, or the security configuration cannot be built outside the container.
       -->
       <dependency>
-        <groupId>javax.annotation</groupId>
-        <artifactId>javax.annotation-api</artifactId>
-        <version>${javax-annotation.version}</version>
+        <groupId>jakarta.annotation</groupId>
+        <artifactId>jakarta.annotation-api</artifactId>
+        <version>${jakarta-annotation.version}</version>
         <scope>provided</scope>
       </dependency>
 
