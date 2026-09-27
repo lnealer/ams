@@ -81,7 +81,7 @@ public class OrderDefaultsServiceImplTest {
     @Test
     public void suggestedLanPassesTheTypeAValidator() {
         stubProperties();
-        when(assetConfigDAO.getConfigurationsForCustomer(CUSTOMER_ID))
+        lenient().when(assetConfigDAO.getConfigurationsForCustomer(CUSTOMER_ID))
                 .thenReturn(Collections.<AssetConfiguration>emptyList());
 
         final AssetConfiguration configuration = new AssetConfiguration();
@@ -97,9 +97,9 @@ public class OrderDefaultsServiceImplTest {
     @Test
     public void aFirstSiteIsNumberedOutOfTheConfiguredWanPool() {
         stubProperties();
-        when(assetConfigDAO.getConfigurationsForCustomer(CUSTOMER_ID))
+        lenient().when(assetConfigDAO.getConfigurationsForCustomer(CUSTOMER_ID))
                 .thenReturn(Collections.<AssetConfiguration>emptyList());
-        when(assetConfigDAO.getWanAddressesInUse())
+        lenient().when(assetConfigDAO.getWanAddressesInUse())
                 .thenReturn(Collections.<String>emptyList());
 
         final AssetConfiguration configuration = new AssetConfiguration();
@@ -120,10 +120,10 @@ public class OrderDefaultsServiceImplTest {
     @Test
     public void aWanAddressIsNeverHandedToTwoCustomers() {
         stubProperties();
-        when(assetConfigDAO.getConfigurationsForCustomer(CUSTOMER_ID))
+        lenient().when(assetConfigDAO.getConfigurationsForCustomer(CUSTOMER_ID))
                 .thenReturn(Collections.<AssetConfiguration>emptyList());
         // Held by some other customer entirely, which this customer's own estate cannot see.
-        when(assetConfigDAO.getWanAddressesInUse())
+        lenient().when(assetConfigDAO.getWanAddressesInUse())
                 .thenReturn(Arrays.asList("198.51.45.2", "198.51.45.3"));
 
         final AssetConfiguration configuration = new AssetConfiguration();
@@ -135,9 +135,9 @@ public class OrderDefaultsServiceImplTest {
     @Test
     public void withNoPoolConfiguredTheWanIsLeftForTheOperator() {
         stubProperties();
-        when(configService.getString(eq(PropertyType.DEFAULT_WAN_SUBNET), anyString()))
+        lenient().when(configService.getString(eq(PropertyType.DEFAULT_WAN_SUBNET), anyString()))
                 .thenReturn(null);
-        when(assetConfigDAO.getConfigurationsForCustomer(CUSTOMER_ID))
+        lenient().when(assetConfigDAO.getConfigurationsForCustomer(CUSTOMER_ID))
                 .thenReturn(Collections.<AssetConfiguration>emptyList());
 
         final AssetConfiguration configuration = new AssetConfiguration();
@@ -150,10 +150,10 @@ public class OrderDefaultsServiceImplTest {
     @Test
     public void wanIsCarriedForwardAndTheNextFreeAddressAllocated() {
         stubProperties();
-        when(assetConfigDAO.getConfigurationsForCustomer(CUSTOMER_ID)).thenReturn(
+        lenient().when(assetConfigDAO.getConfigurationsForCustomer(CUSTOMER_ID)).thenReturn(
                 Arrays.asList(existing("64.12.30.42", "255.255.255.248", "64.12.30.41",
                         "10.21.0.1", "255.255.252.0")));
-        when(assetConfigDAO.getWanAddressesInUse()).thenReturn(Arrays.asList("64.12.30.42"));
+        lenient().when(assetConfigDAO.getWanAddressesInUse()).thenReturn(Arrays.asList("64.12.30.42"));
 
         final AssetConfiguration configuration = new AssetConfiguration();
         service.applyConfigurationDefaults(configuration, CUSTOMER_ID);
@@ -174,7 +174,7 @@ public class OrderDefaultsServiceImplTest {
     @Test
     public void suggestedLanAvoidsSubnetsTheCustomerAlreadyUses() {
         stubProperties();
-        when(assetConfigDAO.getConfigurationsForCustomer(CUSTOMER_ID)).thenReturn(
+        lenient().when(assetConfigDAO.getConfigurationsForCustomer(CUSTOMER_ID)).thenReturn(
                 Arrays.asList(existing(null, null, null, "192.168.10.1", "255.255.255.0"),
                         existing(null, null, null, "192.168.11.1", "255.255.255.0")));
 
@@ -187,7 +187,7 @@ public class OrderDefaultsServiceImplTest {
     @Test
     public void nothingTheOperatorTypedIsOverwritten() {
         stubProperties();
-        when(assetConfigDAO.getConfigurationsForCustomer(CUSTOMER_ID)).thenReturn(
+        lenient().when(assetConfigDAO.getConfigurationsForCustomer(CUSTOMER_ID)).thenReturn(
                 Arrays.asList(existing("64.12.30.42", "255.255.255.248", "64.12.30.41",
                         "10.21.0.1", "255.255.252.0")));
 
