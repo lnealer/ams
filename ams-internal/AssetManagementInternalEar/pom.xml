@@ -14,8 +14,8 @@
   <name>Asset Management Internal EAR</name>
   <description>
     Packaging only - no Java. Retained from the pre-container deployment, where the application was
-    installed into a shared application server as an EAR. The Liberty image deploys the WAR
-    directly, so this module is built but not what runs.
+    installed into a shared application server as an EAR. Tomcat deploys the WAR directly, so
+    this module is built but not what runs.
   </description>
 
   <dependencies>
@@ -37,7 +37,7 @@
           <defaultLibBundleDir>lib</defaultLibBundleDir>
           <addClasspath>true</addClasspath>
           <generateApplicationXml>true</generateApplicationXml>
-          <displayName>AMS Internal Asset Management</displayName>
+          <displayName>Asset Management System</displayName>
           <modules>
             <webModule>
               <groupId>com.example.ams</groupId>

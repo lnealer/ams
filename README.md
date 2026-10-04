@@ -1,10 +1,24 @@
-# AMS Internal Asset Management
+# Asset Management System
 
 A legacy-style Java EE / Spring / Struts 2 hybrid web application, packaged as a WAR (and an EAR)
-for WebSphere Liberty. Not a Spring Boot application: there is no embedded server and no fat jar,
-and the entire bootstrap is driven by `web.xml`.
+and deployed on Apache Tomcat 9. Not a Spring Boot application: there is no embedded server and no
+fat jar, and the entire bootstrap is driven by `web.xml`.
 
 Every dependency version, where it is declared, and what blocks each upgrade: [TECH_STACK.md](TECH_STACK.md).
+
+**One flow, the whole stack.** The application does one thing: an operator places a *new install
+order* for a customer - site, device, installation appointment - and gets a receipt. That single
+flow is kept deliberately small while still passing through every layer of the stack: Struts 2
+actions, interceptors, `ModelDriven` session state and a JSON endpoint; Spring Security
+pre-authentication and CSRF; the one Spring MVC controller; `@Transactional` services over
+hand-written Spring JDBC; the Java port of the scheduling stored procedure; the network
+validators; the address validation REST client (Jackson); and the embedded H2 schema. See
+[Placing an install order](#placing-an-install-order).
+
+The earlier screens - dashboard, asset search and detail, customer admin, the six-step order,
+cancellation, decommission, network change requests, provisioning, calendars, admin utilities and
+user impersonation - have been removed, together with the services, DAOs and stored-procedure
+ports only they used. The schema is unchanged.
 
 ## Layout
 
@@ -19,14 +33,48 @@ Three Maven reactors, built in this order:
 ## Building
 
 ```bash
-./build.sh
+./build.sh                    # clean install, all three reactors, on JDK 8
+./build.sh jdk21              # the same on JDK 21 - still Java 8 bytecode
+./build.sh jdk8 test          # any Maven goal; extra arguments go to Maven
+./build.sh jdk8 install -DskipTests
 ```
 
-Builds and installs all three reactors in dependency order. `./build.sh package` or
-`./build.sh test` work too.
+Builds and installs all three reactors in dependency order. The first argument names the JDK
+(`jdk8`, the default, or `jdk21`), the second the Maven goal. JDKs are found through
+`/usr/libexec/java_home`, so any vendor's install works, and `JAVA_HOME` in the calling shell is
+ignored. Requires Maven 3.9 on the PATH (Homebrew's is fine).
 
-Requires JDK 17 with `JAVA_HOME` pointed at it (the script defaults to a Zulu 17 install) and
-Maven 3.9. The compiler targets Java 8 bytecode throughout.
+The application is **Java 8**: the parent POM sets `maven.compiler.source` / `target` to 1.8 and
+the class files carry major version 52 whichever JDK built them. On JDK 9 or later the POM's
+`jdk9plus` profile activates by itself: it compiles with `--release 8`, so a Java 9+ API cannot slip
+in unnoticed, and it opens `java.lang` to the test JVM for the pinned Mockito 1.9.5 - a flag a Java 8
+JVM refuses, which is why it is not in the main Surefire configuration.
+
+### Windows
+
+On Windows the toolchain lives in `C:\tools`, which an AWS WorkSpaces restart wipes, so restore it
+first in every fresh session - it extracts JDK 8, JDK 21, Maven and a Maven repository snapshot from
+the zips beside it, sets `JAVA_HOME`, and maps `X:` to this directory:
+
+```powershell
+. 'D:\r.anche\My Files\Home Folder\mysoftware\tools\setup-env.ps1'
+```
+
+Then build from Git Bash with the script for the JDK you want:
+
+```bash
+./build-jdk8.sh             # compile and package on JDK 8, the deployment JDK
+./build-jdk21.sh            # compile and package on JDK 21
+./build-jdk8.sh test        # any Maven goal; extra arguments go to Maven
+./build-jdk8.sh install -DskipTests
+```
+
+Both pin their JDK regardless of the inherited `JAVA_HOME` - JDK 26 is on the system PATH there and
+the pinned JaCoCo fails on it - and both build through `X:`, because the repository's own path
+already takes its longest file past `MAX_PATH`. `build.ps1` is the PowerShell equivalent of
+`build-jdk21.sh`. The two scripts share `target\`, so the WAR there is from whichever ran last; both
+emit Java 8 bytecode, so either runs on either JDK. On macOS they are aliases for `./build.sh jdk8`
+and `./build.sh jdk21`.
 
 ## Architecture
 
@@ -56,56 +104,126 @@ database surrogate key; subclasses expose `public static final` singletons regis
 
 ## The database
 
-Oracle. The schema lives in `db/oracle/` and is built by `00_init.sh`, which the container runs on
-first boot:
+Embedded **H2**, in file mode, built at startup by
+`ams-common/.../shared/schema/SchemaInstaller` from the SQL in that module's main resources. There
+is no Oracle, no container, and no migration tool.
 
 | Directory | Contents |
 |---|---|
-| `01_tables/` | 35 tables — 32 translated from the H2 fixtures, plus three the PL/SQL and the ordering flow need |
-| `02_constraints/` | 69 check constraints, 32 foreign keys |
-| `03_indexes/` | 82 indexes |
-| `04_sequences/` | 18 sequences |
-| `05_views/` | `AMS_NCR_SCHEDULES_EXT_V` |
-| `06_packages/` | 3 package specs and 3 bodies — the 9 stored procedures the Java calls |
-| `07_seed/` | reference data, calendars and demo rows, in foreign-key order |
-| `09_validate/` | the acceptance gate |
+| `db/schema/01_tables/` | 35 tables |
+| `db/schema/02_constraints/` | 21 check constraints, 32 foreign keys |
+| `db/schema/03_indexes/` | 41 indexes |
+| `db/schema/04_sequences/` | 19 sequences |
+| `db/schema/05_views/` | `AMS_NCR_SCHEDULES_EXT_V` |
+| `db/seed/{core,demo,rolling}/` | see *One schema, two consumers* below |
 
-The table DDL is **generated from the H2 fixtures**, not hand-copied, so column names and types
-cannot drift from the schema the DAO tests run against.
+The DDL is the Oracle DDL, unchanged. H2 1.3.176 accepts `VARCHAR2(n CHAR)`, `NUMBER(19)`,
+`CREATE TABLE IF NOT EXISTS`, `SYSTIMESTAMP`, `DUAL`, `NVL`, `TRUNC`, `GREATEST` and `ROWNUM`
+natively, with no `MODE=Oracle` - which is why the same statements the DAOs issue have always run
+against both. The only casualty is six function-based indexes, which H2 has no equivalent for; they
+are commented rather than deleted, and `LDAPROLES_GROUP_IX` is the one that would matter at scale.
 
-Two tables exist only here, because the procedures cannot be written correctly without them:
-`AMS_TIMESLOT_RESERVATIONS` (a ledger behind `AMS_TIMESLOTS.RESERVED_COUNT`, without which
-`cancel_timeslot` would decrement blind and a double-cancel would eventually double-book a slot)
-and `AMS_CIRCUIT_WINDOWS` (what `p_circuit_window_id` and `p_released_count` refer to).
+**The stored procedures are now Java.** The ones the install order uses live in
+`ams-common/.../shared/dao/scheduling`: `TimeslotSchedulingDAO` (reserve and cancel a calendar
+place) and `EntityEmailDAO` (queue a notification). The shared `StoredProcedureDAO` interface and
+its bean name are unchanged. The network change and decommission procedures went with the screens
+that called them; the original PL/SQL for all nine is kept under `db/oracle/06_packages` as the
+specification the port was written from.
 
-**No procedure commits.** The callers are inside a Spring `@Transactional` sharing the same
-connection, so a `COMMIT` in PL/SQL would silently commit the caller's work and destroy its
-rollback. Each takes a `SAVEPOINT` instead, so a status other than `OK` reliably means nothing was
-changed.
+Four properties carried over and are the ones to protect:
 
-`09_validate/validate.sql` is the acceptance gate and fails the container if the schema is wrong.
-It asserts object counts, that nothing is `INVALID`, and then **smoke-calls every one of the nine
-procedures**. That last part is not optional: Spring's `StoredProcedure` binds positionally and
-`compile()` never reads database metadata, so a signature mismatch is invisible until a user
-clicks the button. Nothing else in the build checks it.
+- **The ledger is the source of truth, not the counter.** `AMS_TIMESLOT_RESERVATIONS` records who
+  holds each place, which is what makes a double reserve take no second place and a double cancel
+  harmless. Without it a cancel would decrement blind and eventually hand a place out twice.
+- **`SELECT ... FOR UPDATE` around the capacity test and the increment**, with the five-second bound
+  that used to be `WAIT 5` now on the connection URL as `LOCK_TIMEOUT=5000`. It exists because
+  the pool's `maxWaitMillis` bounds pool waits, not query waits.
+- **`TIMESLOTS_RESERVED_CK` is the backstop.** A counter bug fails loudly instead of double-booking
+  an engineer.
+- **`AVAILABLE_FL` is never written.** It means "ops opened this slot", not "this slot has room".
 
-## Running the whole stack
+Nothing commits. Each operation takes a savepoint on the caller's connection and rolls back to it on
+any outcome other than `OK`, so a non-`OK` status reliably means nothing changed - placing an
+install order writes the order, its installation and the reservation as one abandonable unit.
+
+## Running
+
+```bash
+./build.sh jdk8 run       # builds, then deploys the WAR to Tomcat 9 on JDK 8 and starts it
+./build.sh jdk8 stop      # stops it
+```
+
+That is the whole story: a JDK, Maven, and an internet connection the first time. `tomcat-mac.sh`
+downloads Apache Tomcat 9 into `~/tools` (checksum verified), configures one instance per JDK beside
+it, and the database is an embedded H2 file under the instance's `data/`, built and seeded on first
+start by `SchemaInstaller`. The WAR is Java 8 bytecode and Tomcat 9 runs on Java 8 and later, so the
+same WAR runs on both instances, and both can be up at once:
+
+| Instance | JDK | URL | Directory |
+|---|---|---|---|
+| `jdk8` | 8 | http://localhost:8080/AssetManagementInternalWeb | `~/tools/tomcat-jdk8` |
+| `jdk21` | 21 | http://localhost:8081/AssetManagementInternalWeb | `~/tools/tomcat-jdk21` |
+
+```bash
+./tomcat-mac.sh jdk8 deploy      # stop, copy in target/AssetManagementInternalWeb.war, start
+./tomcat-mac.sh jdk8 start       # start without redeploying
+./tomcat-mac.sh jdk8 stop
+./tomcat-mac.sh jdk8 restart
+./tomcat-mac.sh jdk8 status
+./tomcat-mac.sh jdk8 reset       # start again on a fresh, reseeded H2 database
+./tomcat-mac.sh jdk8 logs        # follow logs/console.log
+```
+
+Substitute `jdk21` for the other instance. `start` and `deploy` return once `/health` answers.
+Everything is plain HTTP: TLS is the reverse proxy's job in every real environment, and `web.xml`
+does not force the session cookie `Secure` (Tomcat still sets the flag on a request that is itself
+secure, which behind the proxy means honouring `X-Forwarded-Proto` with a `RemoteIpValve`).
+
+Tomcat 9 rather than 10 or later: the application is Servlet 3.1 / JSP 2.3 on `javax.*`, and Tomcat
+10 moved to `jakarta.*`. The server supplies three things the WAR relies on, and each instance
+recreates them on every run: the `jdbc/amsInternalDS` pool behind `web.xml`'s `resource-ref`
+(declared in the WAR's own `META-INF/context.xml` and pointed at the instance's H2 file through the
+`AMS_DATASOURCE_URL` variable that `bin/setenv.sh` exports), the H2 driver (in the instance `lib/`,
+from `~/.m2`) and the JVM options (in `bin/setenv.sh`, including `-Dspring.profiles.active=local`).
+Each instance has its own H2 file, since embedded H2 admits one JVM.
+
+Hand edits to `server.xml`, `setenv.sh` or the stock `conf/` files are overwritten on the next run;
+change the script instead. `data/` and `logs/` are kept.
+
+Embedded H2 is a file, and exactly one JVM may hold it. A server left behind by an earlier run keeps
+the lock and the next start fails with "Database may be already in use", which names the symptom and
+not the cause - so `deploy` and `stop` both clear strays first.
+
+Console output goes to `logs/console.log`, not the terminal. The application's log4j console
+appender holds a lock while it writes, so a JVM left writing to a terminal pipe that nobody reads
+any more hangs every request thread once the pipe fills.
+
+### On Windows
+
+`tomcat.sh` is the Git Bash equivalent, with the same two instances at `C:\tools\tomcat-jdk8` and
+`C:\tools\tomcat-jdk21` (`./tomcat.sh jdk8 deploy`, and so on; on macOS it hands over to
+`tomcat-mac.sh`). It extracts Tomcat from `tools\dl\tomcat.zip` - which must be a 9.0.x
+distribution - when `C:\tools\tomcat` is missing, writes the pool as a context descriptor under
+`conf\Catalina\localhost`, and configures HTTP only. `./build-jdk8.sh run` builds and deploys in one
+step.
+
+### The Oracle stack
+
+`docker-compose.yml` and `db/oracle` are kept but unwired. The container path should still work -
+the WAR's `META-INF/context.xml` takes its driver class and URL from the environment and compose
+sets them to Oracle - but nothing maintains it (it has not been re-run since the move to Tomcat),
+and the PL/SQL under `db/oracle/06_packages` is now reference material rather than running code: it
+is the specification the Java port was written from.
 
 ```bash
 ./build.sh docker
 ```
 
-Builds the three reactors, then `docker compose up --build`: Oracle 23ai Free plus the Liberty
-application wired to it. The app waits for the database to report healthy. First boot builds the
-schema and runs the gate — watch it with `docker compose logs -f oracle`.
-
-`docker compose up -d oracle` brings up just the database if you only want somewhere to point at.
-
 ## Deploying
 
-The image is built from `AssetManagementInternalWeb/Dockerfile` on
-`websphere-liberty:26.0.0.8-full-java8-ibmjava`, listening on 9081 (HTTP) and 9444 (HTTPS,
-TLSv1.2). Liberty configuration is in `src/main/liberty/config`.
+The image is built from `AssetManagementInternalWeb/Dockerfile` on `tomcat:9.0-jdk8-temurin`,
+listening on 8080 (HTTP; TLS is the reverse proxy's job). The connection pool is declared in the
+WAR's `META-INF/context.xml`, so the server needs nothing else from the repository.
 
 Two files are **not** in this repository and must be supplied before the image will build — each
 directory has a README explaining what belongs there:
@@ -116,17 +234,21 @@ directory has a README explaining what belongs there:
 - `AssetManagementInternalWeb/certs/internal-ca.crt` — the internal CA the proxy and the platform
   REST services are signed by. For local use, any self-signed certificate will do.
 
-Database connection details and the keystore password come from the environment through
-`bootstrap.properties`. No credential is committed; `docker-compose.yml` carries development
+Database connection details come from the environment: `META-INF/context.xml` reads
+`AMS_DATASOURCE_DRIVER`, `AMS_DATASOURCE_URL`, `AMS_DATASOURCE_USER` and `AMS_DATASOURCE_PASSWORD`,
+each with an embedded-H2 default, through the environment property source the Dockerfile registers
+in `catalina.properties`. No credential is committed; `docker-compose.yml` carries development
 defaults for a throwaway local database only.
 
 The Spring profile selects the security wiring: `production` and `qa` register the real
 header-reading filter, while `local`, `dev` and `fit` register a developer stub that asserts a
-fixed identity when no proxy is in front of the container. Set it in `jvm.options`.
+fixed identity when no proxy is in front of the container. Set it with
+`-Dspring.profiles.active` in `CATALINA_OPTS` (`bin/setenv.sh` locally, the `app` service's
+environment in compose).
 
 ## Testing
 
-239 tests across the five code modules.
+242 tests across the five code modules.
 
 DAO and service integration tests run against an embedded H2 database created by the DDL scripts
 under `src/test/resources/sql` — one file per table, plus sequences, a view and seed data, wired up
@@ -142,21 +264,17 @@ every result JSP actually exists.
 
 ## Deviations from the specification
 
-Seven, all deliberate:
+Five, all deliberate:
 
 1. **Packaging plugin versions.** `maven-war-plugin` 2.6 and `maven-ear-plugin` 2.8 cannot load
    under Maven 3.9 — they fail with a Plexus API incompatibility before the build starts. Bumped
    to 3.4.0 and 3.3.0; the original values are recorded in a comment in the parent POM. Every other
    pinned version is exactly as specified.
 
-2. **Base image.** The specified `websphere-liberty:26.0.0.2-full-java8-openj9-ubi-minimal` does
-   not exist, and neither does any java8 + openj9 combination — IBM publishes Java 8 Liberty on
-   IBM Java only, with OpenJ9 variants starting at Java 11. Using
-   `26.0.0.8-full-java8-ibmjava` instead: same Liberty feature set, same Java 8. Java 8 was kept
-   rather than moving to a Java 17 image because the whole build targets it
-   (`maven.compiler.target`, the `jdbc-4.1` feature, `ojdbc8`). The cost is that no Java 8 Liberty
-   image is built for arm64, so on Apple Silicon that one container runs emulated — see the
-   `platform` pin in `docker-compose.yml`, which should be removed on an amd64 host.
+2. **Application server.** The application was specified for WebSphere Liberty and runs on Apache
+   Tomcat 9 (`tomcat:9.0-jdk8-temurin` in the container). What the server used to supply moved with
+   it: the JNDI pool to the WAR's `META-INF/context.xml`, the JVM options to `CATALINA_OPTS`. Java 8
+   is kept, as specified; the image has an arm64 build, so nothing runs emulated on Apple Silicon.
 
 3. **Runtime JDBC driver.** `ojdbc8-23.8.0.25.04` rather than the specified 21.5.0.0, matching the
    Oracle 23ai server the compose stack runs. The BOM's test-scope pin stays at 12.2.0.1 as
@@ -167,63 +285,79 @@ Seven, all deliberate:
    services module resolves roles and has to return an `AmsUser`, and it cannot depend on the WAR.
    The filters, provider and CSRF matcher are in `web.security` as specified.
 
-5. **Search grid markup.** The specification describes the search action building inline HTML
-   anchors into its grid rows. The action returns a flat `AssetGridRow` of plain values instead and
-   the JSP builds the links from the identifiers, so an asset tag or serial containing markup is
-   escaped rather than rendered. Sending markup from the action would make every asset field a
-   stored XSS vector.
-
-6. **Legacy outer-join syntax.** Oracle's `(+)` syntax appears once, in `AmsServicesDAOImpl`, and
-   is marked Oracle-only. Everything else uses ANSI joins so the SQL can be exercised against H2.
-
-7. **Dojo Toolkit.** `js/dojo-release-1.17.3/` is present but empty, with a README explaining what
+5. **Dojo Toolkit.** `js/dojo-release-1.17.3/` is present but empty, with a README explaining what
    belongs there. The toolkit is a third-party distribution of several thousand files.
    `js/common.js` is written against the DOM directly and does not depend on it.
 
-## Ordering an asset
+## Placing an install order
 
-The ordering flow collects everything needed to stage a device and get it to site, in six steps.
-Each validates its own input; the partly completed order lives in the session, so nothing is
+Start from the home page (`/Home.action`, where the context root redirects): it lists the customers,
+and **New install order** against one of them makes it the session's customer and opens the flow.
+Each step validates its own input; the partly completed order lives in the session, so nothing is
 written until it is placed and an abandoned order leaves no rows behind.
 
-| Step | Screen | What it collects |
-|---|---|---|
-| 0 | New order | Order type, and for a replacement the asset it replaces |
-| 1 | Contact information | Ordering, shipping and installation contacts |
-| 2 | Address | Shipping and installation address, checked against the address validation service |
-| 3 | Device details | Device nickname and the weekly maintenance window |
-| 4 | External configuration | WAN and LAN addressing, run through the WAN and LAN validators |
-| 5 | Subscriber PCs | The machines that will sit behind the device |
-| 6 | Despatch window | The shipping window, then **Place order** |
+| Step | Screen | What it collects | What it exercises |
+|---|---|---|---|
+| 1 | Site | Site contact and installation address | address validation interceptor and REST client (Jackson); commons-validator |
+| 2 | Device | Nickname, WAN and LAN addressing | the `AssetManagementNetworkValidation` module (commons-lang 2) |
+| 3 | Appointment | An installation slot, then **Place order** | a JSON action behind the AJAX-token stack; the scheduling port |
+| - | Confirmation | - (the receipt, read back from the database) | the detail read across five tables |
 
-There is **no review step**. Every step validates as it is left and the place step re-validates the
-whole model, so a review page would only repeat what the user had just been through. The
-confirmation page is the receipt: it is the one place the whole order is shown together.
+There is **no review step**. Every step validates as it is left and Place order re-validates the
+whole model, so a review page would only repeat what the user had just been through.
+
+Placing the order is one transaction in `OrderServiceImpl.placeInstallOrder`: the site address and
+contact, the order row, the device configuration, an `AMS_INSTALLATIONS` row, the `INSTALL`
+reservation through `TimeslotSchedulingDAO` (which moves both the installation and the order to
+`SCHEDULED`), an audit event and a queued confirmation email.
 
 Three things are worth knowing about how this behaves:
 
-- **The despatch window is not held while it is being looked at.** It is reserved through
-  `AMS_SCHEDULING_PG.reserve_timeslot` at the moment the order is placed. If it fills in between,
-  the order is still placed — there is no review step to go back to, and discarding six screens of
-  keyed data over a warehouse slot would be the wrong trade — but `SHIP_WINDOW_ID` is left null so
-  nothing claims capacity the reservation ledger does not back, and the confirmation says so.
-- **A postcode with no warehouse region yields no windows.** That is a gap in
-  `AMS_INSTALL_REGIONS`, not an error: the order can still be placed and operations assign a window
-  by hand.
-- **Address validation never blocks an order.** A correction is offered for the user to accept or
-  refuse, and an outage lets the address through marked unverified.
+- **The appointment is not held while it is being looked at.** The slots are fetched as JSON when
+  the page opens and reserved only when the order is placed. If the chosen one fills in between,
+  the order is still placed - discarding three screens of keyed data over an engineer's morning
+  would be the wrong trade - but the installation stays `NOTSCHED` and the confirmation says so.
+- **A ZIP code with no engineer region yields no slots.** That is a gap in `AMS_INSTALL_REGIONS`,
+  not an error: the order can still be placed and operations book the visit by hand. The seeded
+  regions cover 78701, 62704, 73301 and 60601 (CENTRAL), 10001, 02108 and 19103 (NORTHEAST), and
+  97201, 98101 and 94105 (WEST).
+- **Address validation never blocks an order.** A correction is offered on the site page for the
+  user to accept or refuse, and an outage lets the address through marked unverified. Locally the
+  stub service offers a correction for most addresses, so expect to be asked.
 
-Despatch windows are carried on `AMS_TIMESLOTS` with `CALL_TYPE_CD = 'SHIP'` rather than in a table
-of their own: a window is warehouse capacity per region per day, which is exactly what that table
-already models, so booking one goes through the same reservation procedure and the same ledger as
-everything else.
+## Order activity report
 
-## Two schemas to keep in step
+`/Report.action` (navigation: **Order activity**, role `INT_VIEW_ORDER`) lists every customer with
+their orders counted by state, the age of the oldest open order and the most recent order placed,
+and offers the same rows as a CSV download. It is a read-only page over the existing services.
 
-The H2 fixtures under `src/test/resources/sql` and the Oracle DDL under `db/oracle` describe the
-same tables and both have to be changed together. The Oracle table DDL is generated from the H2
-files by a translator for exactly that reason, but the seed data and the two Oracle-only tables
-are not — when a column changes, check both.
+It is also the modernisation showcase. `ReportAction`, `OrderActivityServiceImpl`,
+`ActivityReport`, `ActivityReportLine` and their tests are written in deliberately pre-Java 9
+idioms - an anonymous comparator, a `switch` with fall-through, a hand-written value class,
+`instanceof` plus cast, `Calendar` arithmetic, `StringBuffer`, JUnit 4 and Mockito 1 - so a Java 21
+upgrade has one small, self-contained feature to rewrite and the before/after is easy to show. The
+idiom-by-idiom list is in
+[TECH_STACK.md](TECH_STACK.md#modernisation-showcase-the-order-activity-report).
+
+## One schema, two consumers
+
+`ams-common/AssetManagementSharedServices/src/main/resources/db` is the schema, and both the tests
+and the running server load the identical files from it over the ordinary compile dependency. There
+used to be a second copy under `src/test/resources/sql` describing the same tables; it was the
+subset, missing both ledger tables and all 53 constraints, and it is gone.
+
+The seed is tiered, because the three tiers have genuinely different lifetimes:
+
+| Tier | When it runs | Who gets it |
+|---|---|---|
+| `db/seed/core` | once, on an empty database | tests and the running app |
+| `db/seed/demo` | once, on an empty database | non-production profiles only |
+| `db/seed/rolling` | **every start** | non-production profiles only |
+
+The rolling tier is calendar capacity, generated relative to today. The Oracle original made it once
+at container first boot, which meant that on a database more than three weeks old the despatch and
+installation screens were silently empty. A persistent embedded file makes that more likely, not
+less. The scripts clear only future slots nobody holds, so re-applying never strands a booking.
 
 ## Demonstration data
 
@@ -231,8 +365,16 @@ The original seed (`07_seed/17` to `32`) is deliberately sparse: every row in it
 for some DAO test, so it is not safe to add to and not much to look at. Two later files exist for
 driving the portal instead.
 
+On the embedded H2 stack the same four customers come from
+`ams-common/.../db/seed/demo/37_demo_order_activity.sql`: the same ids, names and account numbers
+as the Oracle file below, with thirteen orders spread over every state the order activity report
+distinguishes and submitted dates relative to today, so the ages on the report stay plausible. The
+demonstration tier runs only on an empty database, so an instance that already has one keeps its
+old rows until it is reset: `./tomcat-mac.sh jdk8 reset` stops it, deletes its H2 file and starts it
+again on a freshly built and seeded schema.
+
 `07_seed/38_AMS_DEMO_LIFECYCLE.sql` adds four customers, each parked at a different point in the
-lifecycle so that every screen has something real on it:
+lifecycle:
 
 | Customer | Region | State |
 |---|---|---|
@@ -292,6 +434,38 @@ how many have aged out but only fails when there are no bookable future ones lef
 
 ## Verification status
 
+On Apache Tomcat 9.0.122, on JDK 8 and JDK 21 side by side (`./build.sh jdk8 run` and
+`./tomcat-mac.sh jdk21 deploy`, embedded H2, fresh databases), 2 October 2026:
+
+| Check | Result |
+|---|---|
+| `./build.sh jdk8` - all three reactors on Zulu 1.8.0_504 | 242 tests, 0 failures (147 in `ams-common`, 95 in `ams-internal`) |
+| `./build.sh jdk21` - the same on OpenJDK 21 (`--release 8`) | 242 tests, 0 failures |
+| Class-file version in the WAR | major 52 (Java 8) |
+| `/health`, both instances (8080, 8081) | `200` |
+| `/Home.action` over HTTP, both instances (8080, 8081) | `200`, customer list rendered, `JSESSIONID` `HttpOnly`, returned on the next request |
+| JNDI pool from `META-INF/context.xml`, one H2 file per instance under `~/tools/tomcat-<jdk>/data` | schema built and seeded on first start |
+
+After the reduction to the install order flow, on the native stack (`./build.sh run`, embedded H2,
+fresh database), 25 September 2026:
+
+| Check | Result |
+|---|---|
+| `./build.sh` - all three reactors | 242 tests, 0 failures |
+| Install order end to end over HTTPS | order placed; receipt shows site, contact, WAN/LAN, notes and the booked slot |
+| Appointment reservation | order and installation both `SCHEDULED` through the scheduling port |
+| Field validation | contact, address, WAN (RFC 1918) and LAN type A errors shown on the right step |
+| Skipping ahead by URL | redirected to the first incomplete step; no order in progress goes home |
+| Address correction offered | shown on the site page; accepting it continues to the device step |
+| `AppointmentSlots` without the AJAX token | JSON `invalidSession` body, which the page answers by reloading |
+| POST without a CSRF token | `403` |
+| Replaying Place order | no second order - the model is gone and the flow restarts |
+| Another customer's order id in the URL | "That order could not be found." |
+| `/health`, Spring MVC `/ams/error` | `200` |
+
+The table below records the verification of the full application, before the reduction, against the
+Oracle container. Rows about screens that no longer exist are historical.
+
 Confirmed against a running stack, not just by test:
 
 | Check | Result |
@@ -325,11 +499,3 @@ The procedure smoke test covers the cases mocks cannot: reserving a full slot re
 `NO_CAPACITY`, reserving twice does not double-count, cancelling twice returns `NOT_RESERVED` and
 leaves the counter intact, a decommission beyond the 42-day window is refused, and a repeated
 notification is suppressed rather than queued again.
-
-### Known wart
-
-Liberty writes an FFDC incident for `DSRA9010E: 'setReadOnly' is not supported` on every
-`@Transactional(readOnly = true)` entry. Spring catches it and logs at debug — the request
-succeeds — but the incident files accumulate. Fixing it properly means switching the datasource
-`res-sharing-scope` to `Unshareable`, which changes connection-pool behaviour, so it is left
-alone deliberately rather than traded for a worse problem.

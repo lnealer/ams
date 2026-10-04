@@ -16,15 +16,16 @@ that file is the only place to change one.
 
 | Component | Version | Declared in |
 |---|---|---|
-| Source / target level | **Java 8** (`1.8`) | `maven.compiler.source` / `.target` |
-| Build JDK | Zulu **17.0.18** LTS | `build.sh` (`JAVA_HOME`) |
-| Runtime JVM | IBM J9 **1.8.0_503** (SR8 FP71) | base image |
+| Source / target level | **Java 8** (`1.8`) | `maven.compiler.source` / `.target`; `--release 8` on JDK 9+ via the `jdk9plus` profile |
+| Build JDK | Zulu **1.8.0_504** (default) or OpenJDK **21** | `build.sh jdk8` / `build.sh jdk21` (`/usr/libexec/java_home`) |
+| Runtime JVM (native) | Zulu 1.8.0_504 and OpenJDK 21, one Apache Tomcat 9 instance each | `tomcat-mac.sh jdk8` / `jdk21` |
+| Runtime JVM (container) | Temurin 8 on Apache Tomcat 9 | `tomcat:9.0-jdk8-temurin` |
 | Maven | **3.9.16** | developer machine |
 | Artifact version | `1.0.0-SNAPSHOT` | `ams.version` |
 
-The build compiles *down* to Java 8 on a JDK 17 toolchain. Compiled classes carry major version
-**52**, confirmed against a class in the deployed WAR — so the bytecode level is genuinely 8, not
-17 output that happens to run.
+The build targets Java 8 on whichever JDK runs it. Compiled classes carry major version **52**,
+confirmed against a class in the deployed WAR. A JDK 9+ build goes through `--release 8`, so it
+compiles against the Java 8 class library rather than merely emitting Java 8 bytecode.
 
 ## Frameworks
 
@@ -44,25 +45,27 @@ The build compiles *down* to Java 8 on a JDK 17 toolchain. Compiled classes carr
 | Component | Version | Notes |
 |---|---|---|
 | Servlet API | **3.1.0** | `javax.*`, `provided` scope, `web-app_3_1` |
-| JSTL | 1.2 | |
-| javax.annotation | 1.3.2 | |
-| Liberty | WebSphere **26.0.0.8** | `websphere-liberty:26.0.0.8-full-java8-ibmjava` |
-| Liberty features | `servlet-3.1`, `jsp-2.3`, `jdbc-4.1`, `transportSecurity-1.0`, `ssl-1.0`, `mpMetrics-1.1`, `mpHealth-4.0` | `server.xml` |
+| JSTL | 1.2 (`jstl:jstl`) | bundled in the WAR - Tomcat ships none |
+| javax.annotation | 1.3.2 | `provided` |
+| Apache Tomcat (native) | **9.0.122** | `tomcat-mac.sh` / `tomcat.sh` (`TOMCAT_VERSION`) |
+| Apache Tomcat (container) | **9.0** | `tomcat:9.0-jdk8-temurin` |
+| JNDI pool | Tomcat DBCP2, `jdbc/amsInternalDS`, 5-10 connections, 30 s wait | `META-INF/context.xml` |
 | Dojo Toolkit | **1.17.3** | vendored, ~11,000 files, restored per environment |
 
 ## Data
 
 | Component | Version | Notes |
 |---|---|---|
-| **Oracle server** | **26ai Free, 23.26.2.0.0** | image `gvenzl/oracle-free:23-slim` |
+| **H2 (runtime + tests)** | **1.3.176** | embedded, file mode; no server, no install |
+| Oracle server *(unwired)* | 26ai Free, 23.26.2.0.0 | `docker compose up` only |
 | JDBC driver — runtime | **ojdbc8 23.8.0.25.04** | copied into the image; supplied per environment |
 | JDBC driver — build/test | ojdbc8 **12.2.0.1** | `ojdbc8.version`, test scope only |
-| H2 — test fixtures | **1.3.176** | in-memory, recreated per test JVM |
+| H2 — tests | 1.3.176 | in-memory, recreated per test JVM, same DDL as runtime |
 
 The two driver versions are intentional and documented in the Dockerfile: the runtime driver matches
 the 23ai server it talks to, while the build compiles and tests against the older one. They never
-have to agree. `ojdbc8` rather than `ojdbc11` because Liberty's `jdbc-4.1` feature and the Java 8
-base image both require it.
+have to agree. `ojdbc8` rather than `ojdbc11` is historical - the Java 8 base image required it - and is
+unchanged because the runtime driver is supplied per environment rather than by the build.
 
 ## Libraries
 
@@ -107,13 +110,10 @@ the BOM so the change stays visible.
 | Service | Image | Platform |
 |---|---|---|
 | `oracle` | `gvenzl/oracle-free:23-slim` | native arm64 |
-| `app` | built from `ams-internal/AssetManagementInternalWeb/Dockerfile` | pinned `linux/amd64` |
+| `app` | built from `ams-internal/AssetManagementInternalWeb/Dockerfile` (`tomcat:9.0-jdk8-temurin`) | native arm64 |
 
 Both containers pin `TZ=America/New_York`, which has to match `-Duser.timezone` or `TRUNC(x) =
 TRUNC(SYSDATE)` day comparisons shift near midnight.
-
-The app image is pinned to `linux/amd64` because no Java 8 Liberty image has an arm64 build — on
-Apple Silicon it runs under emulation. That pin disappears the moment the runtime moves off Java 8.
 
 ## Modules
 
@@ -139,7 +139,7 @@ intended destination and, more usefully, the order the work has to happen in.
 
 | From | To | Blocked by |
 |---|---|---|
-| Java 8 | Java 21 | base image; `maven.compiler.target`; Liberty feature set |
+| Java 8 | Java 21 | base image; `maven.compiler.source` / `.target`; the JDK the servlet container runs on (Tomcat 9 already runs on 21) |
 | Servlet 3.1 `javax.*` | Jakarta EE 9+ `jakarta.*` | nothing — but everything else waits on it |
 | Spring 5.3.39 | Spring 6.x | Jakarta namespace |
 | Spring Security 5.3.13 | Spring Security 6.x | Spring 6 |
@@ -149,13 +149,13 @@ intended destination and, more usefully, the order the work has to happen in.
 
 **The servlet API is the hard edge.** Spring 6 and Struts 7 both require Jakarta EE 9+. Moving
 `javax.servlet` → `jakarta.servlet` touches every JSP, filter, listener and `web.xml`, and the
-Liberty features have to move with it (`servlet-3.1` → `servlet-6.0`, `jsp-2.3` → `pages-3.1`).
+servlet container has to move with it (Tomcat 9 → Tomcat 10.1, which serves only `jakarta.*`).
 Neither framework upgrade can start before it, and the two cannot be done independently afterwards
 either — Struts 7 needs Spring 6 to be on the same namespace.
 
-**The runtime JVM is Java 8, not 17.** Changing `maven.compiler.target` alone produces classes the
-container cannot load. The base image has to change in the same commit, which also removes the
-`linux/amd64` pin.
+**The runtime JVM and the compiler target move together.** Raising `maven.compiler.target` alone
+produces classes a Java 8 container cannot load; the Tomcat base image and the JDK the local Tomcat
+runs on have to change in the same commit.
 
 **Dojo 1.17.3 pins the content security policy.** `WebSecurityConfig` allows `'unsafe-inline'` and
 `'unsafe-eval'` specifically because that build needs both. The policy cannot be tightened until the
@@ -164,16 +164,17 @@ file count suggests.
 
 ### Patterns present for the migration to find
 
-Counted across `ams-common` and `ams-internal`, excluding `target/`:
+Counted across `ams-common` and `ams-internal`, excluding `target/`, after the reduction to the
+single install order flow (25 September 2026):
 
-| Pattern | Files |
+| Pattern | Count |
 |---|---|
-| `com.opensymphony.*` imports | 53 |
-| Field `@Autowired` | 91 |
+| `com.opensymphony.*` imports | 14 files |
+| Field `@Autowired` | 43 fields |
 | `@StrutsParameter` annotations | **0** — every bound setter is unannotated |
-| `ModelDriven` actions | 3 |
-| `Calendar` / `new Date()` | 17 |
-| `SimpleDateFormat` | 4 |
+| `ModelDriven` actions with their own model | 2 — `InstallOrderBaseAction` (shared by the three install steps) and `JsonErrorAction` |
+| `Calendar` / `new Date()` | 7 files |
+| `SimpleDateFormat` | 1 file |
 
 Also throughout: hand-written SQL as concatenated `String` constants, XML Struts configuration,
 anonymous `RowMapper` implementations, and `javax.annotation` rather than `jakarta.annotation`.
@@ -181,3 +182,28 @@ anonymous `RowMapper` implementations, and `javax.annotation` rather than `jakar
 `@StrutsParameter` being absent everywhere is the one that fails silently. Struts 7 stops injecting
 request parameters into unannotated setters — an action still compiles, still runs, and simply
 receives nulls for every field the form submitted.
+
+### Modernisation showcase: the order activity report
+
+`/Report.action` - `ReportAction`, `OrderActivityServiceImpl`, `ActivityReport`,
+`ActivityReportLine` and their three tests - was written on 2 October 2026 in deliberately
+pre-Java 9 idioms, so a Java 21 upgrade has one small, self-contained feature to rewrite and the
+before/after is easy to show. Each idiom, where it is, and what a current JDK offers instead:
+
+| Java 8 idiom | Where | Java 21 equivalent |
+|---|---|---|
+| Anonymous `Comparator` class | `OrderActivityServiceImpl.buildReport` | lambda, `Comparator.comparingInt(...).thenComparing(...)` |
+| `switch` on a `String` with fall-through `case` labels and `break` | `OrderActivityServiceImpl.summarise` | switch expression, `case "A", "B" ->` |
+| Hand-written value class: fields, getters, setters, `equals`, `hashCode`, `toString` | `ActivityReportLine` | `record` |
+| `instanceof` followed by a cast | `ActivityReportLine.equals` | pattern matching for `instanceof` |
+| `Collections.unmodifiableList(new ArrayList<T>(x))`, `unmodifiableMap(...)` | `ActivityReport` constructor | `List.copyOf`, `Map.copyOf` |
+| Explicit type arguments: `new ArrayList<ActivityReportLine>()`, `Collections.<Order>emptyList()` | throughout | diamond `<>`, `var`, `List.of()` |
+| Index `for` loops and explicit `Iterator` loops | `ActivityReport`, `OrderActivityServiceImpl` | enhanced `for`, streams, `Collectors.groupingBy` |
+| Counting into a `Map` with `containsKey` and `put` | `OrderActivityServiceImpl.count` | `Map.merge` |
+| `java.util.Date`, `Calendar` arithmetic, `SimpleDateFormat` | `daysBetween`, `describe`, `ReportAction.toCsv` | `java.time`: `LocalDate`, `ChronoUnit.DAYS.between`, `DateTimeFormatter` |
+| `null` checks standing in for an absent value | `earlier`, `isAfter`, `getOldestOpenOrderAgeDays` | `Optional` |
+| `StringBuffer` and `StringBuilder` text building, `String.format` | `ReportAction.toCsv`, `describe` | text blocks, `String.formatted` |
+| `getBytes("UTF-8")` with a checked `UnsupportedEncodingException` | `ReportAction.exportCsv` | `StandardCharsets.UTF_8` |
+| `try { } finally { close() }` | `ReportActionTest.readLines` | try-with-resources |
+| Boxing by hand: `Integer.valueOf`, `.intValue()`, `.longValue()` | throughout | autoboxing left to the compiler |
+| JUnit 4 (`@RunWith`, `@Before`, message-first `assertEquals`) and Mockito 1 (`org.mockito.Matchers`, `org.mockito.runners.MockitoJUnitRunner`, `@InjectMocks`) | the three tests | JUnit 5 (`@ExtendWith`, `@BeforeEach`) and Mockito 5 |

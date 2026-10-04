@@ -9,7 +9,7 @@
   <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>AMS Parent BOM</name>
-  <description>Parent POM and dependency BOM for the AMS Internal Asset Management platform.</description>
+  <description>Parent POM and dependency BOM for the Asset Management System platform.</description>
 
   <properties>
     <maven.compiler.source>1.8</maven.compiler.source>
@@ -227,7 +227,7 @@
         <scope>runtime</scope>
       </dependency>
       <!--
-        The JSR-250 security annotations. Liberty provides these at runtime, so the scope is
+        The JSR-250 security annotations. the servlet container provides these at runtime, so the scope is
         provided - but @EnableGlobalMethodSecurity(jsr250Enabled = true) needs them on the compile
         and test classpath, or the security configuration cannot be built outside the container.
       -->
@@ -325,22 +325,6 @@
   </dependencies>
 
   <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <!--
-            The pinned Mockito bundles a cglib that predates the module system and generates its
-            proxies by calling ClassLoader.defineClass reflectively. Opening java.lang keeps the
-            pinned test stack working on a modular JDK; it is a test-time concern only and has no
-            effect on what is packaged.
-          -->
-          <argLine>--add-opens java.base/java.lang=ALL-UNNAMED</argLine>
-        </configuration>
-      </plugin>
-    </plugins>
-
     <pluginManagement>
       <plugins>
         <plugin>
@@ -380,7 +364,40 @@
   </build>
 
   <profiles>
-    <!-- Legacy leftover from the pre-Liberty era; retained but never activated by CI. -->
+    <!--
+      What a build on a modern JDK needs and a Java 8 build must not see.
+
+      The application is Java 8. A JDK 8 javac compiles it with -source/-target 1.8 and the JVM runs
+      the tests with no module flags. On JDK 9 and later two things change. The compiler is told
+      "release 8", so it compiles against the Java 8 class library - with plain -source/-target it
+      would accept a Java 9+ API and the call would fail only at runtime on Java 8. And the pinned
+      Mockito bundles a cglib that predates the module system and defines its proxies through
+      ClassLoader.defineClass reflectively, so the test JVM has java.lang opened to it - a flag a
+      Java 8 JVM rejects at startup, which is why it lives here rather than in the main Surefire
+      configuration. Neither setting changes what is packaged: the class files are version 52 either
+      way.
+    -->
+    <profile>
+      <id>jdk9plus</id>
+      <activation>
+        <jdk>[9,)</jdk>
+      </activation>
+      <properties>
+        <maven.compiler.release>8</maven.compiler.release>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <argLine>--add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <!-- Legacy leftover from an earlier application server; retained but never activated by CI. -->
     <profile>
       <id>local</id>
       <build>
