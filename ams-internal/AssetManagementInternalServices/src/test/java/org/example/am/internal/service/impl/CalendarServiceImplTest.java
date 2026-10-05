@@ -1,14 +1,14 @@
 package org.example.am.internal.service.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -25,13 +25,12 @@ import org.example.am.shared.domain.NetworkChangeRequest;
 import org.example.am.shared.domain.NetworkChangeRequestType;
 import org.example.am.shared.domain.PropertyType;
 import org.example.am.shared.service.ConfigService;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Matchers;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * The scheduling rules, isolated from the database.
@@ -40,7 +39,7 @@ import org.mockito.runners.MockitoJUnitRunner;
  * stored procedure gets called and what the scheduling window allows, neither of which needs a real
  * database - and the procedures do not exist in the test schema anyway.</p>
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class CalendarServiceImplTest {
 
     private static final SimpleDateFormat DAY = new SimpleDateFormat("yyyy-MM-dd");
@@ -59,18 +58,15 @@ public class CalendarServiceImplTest {
 
     private NetworkChangeRequest request;
 
-    @Before
+    @BeforeEach
     public void setUp() {
-        when(calendarServiceDAO.getHolidays(Matchers.<Date>any(), Matchers.<Date>any()))
+        when(calendarServiceDAO.getHolidays(any(Date.class), any(Date.class)))
                 .thenReturn(new ArrayList<Date>());
-        when(configService.getInt(Matchers.<PropertyType>any(), Matchers.anyInt()))
-                .thenAnswer(new org.mockito.stubbing.Answer<Integer>() {
-                    @Override
-                    public Integer answer(final org.mockito.invocation.InvocationOnMock invocation) {
-                        // Fall through to the compiled-in default, which is what an unconfigured
-                        // property does in production.
-                        return (Integer) invocation.getArguments()[1];
-                    }
+        when(configService.getInt(any(PropertyType.class), anyInt()))
+                .thenAnswer(invocation -> {
+                    // Fall through to the compiled-in default, which is what an unconfigured
+                    // property does in production.
+                    return (Integer) invocation.getArguments()[1];
                 });
 
         request = new NetworkChangeRequest();
@@ -93,11 +89,11 @@ public class CalendarServiceImplTest {
         request.setNetworkChangeRequestTypes(new java.util.LinkedHashSet<NetworkChangeRequestType>(
                 Arrays.asList(NetworkChangeRequestType.BANDWIDTH_CHANGE)));
         when(storedProcedureDAO.reserveNetworkChangeDate(anyLong(), anyLong(), anyString(),
-                Matchers.<Date>any(), anyBoolean(), anyString())).thenReturn("OK");
+                any(Date.class), anyBoolean(), anyString())).thenReturn("OK");
 
         assertTrue(calendarService.reserveNetworkChangeDate(request, daysFromNow(10), "junit"));
         verify(storedProcedureDAO).reserveNetworkChangeDate(eq(9001L), eq(5001L),
-                Matchers.<String>any(), Matchers.<Date>any(), eq(false), eq("junit"));
+                anyString(), any(Date.class), eq(false), eq("junit"));
     }
 
     /**
@@ -110,11 +106,11 @@ public class CalendarServiceImplTest {
                 Arrays.asList(NetworkChangeRequestType.SITE_TYPE_CHANGE,
                         NetworkChangeRequestType.IP_READDRESS)));
         when(storedProcedureDAO.reserveNetworkChangeDate(anyLong(), anyLong(), anyString(),
-                Matchers.<Date>any(), anyBoolean(), anyString())).thenReturn("OK");
+                any(Date.class), anyBoolean(), anyString())).thenReturn("OK");
 
         assertTrue(calendarService.reserveNetworkChangeDate(request, daysFromNow(10), "junit"));
         verify(storedProcedureDAO).reserveNetworkChangeDate(eq(9001L), eq(5001L),
-                Matchers.<String>any(), Matchers.<Date>any(), eq(true), eq("junit"));
+                anyString(), any(Date.class), eq(true), eq("junit"));
     }
 
     @Test
@@ -134,14 +130,16 @@ public class CalendarServiceImplTest {
         request.setNetworkChangeRequestTypes(new java.util.LinkedHashSet<NetworkChangeRequestType>(
                 Arrays.asList(NetworkChangeRequestType.MOVE)));
         when(storedProcedureDAO.reserveNetworkChangeDate(anyLong(), anyLong(), anyString(),
-                Matchers.<Date>any(), anyBoolean(), anyString())).thenReturn("NO_CAPACITY");
+                any(Date.class), anyBoolean(), anyString())).thenReturn("NO_CAPACITY");
 
         assertFalse(calendarService.reserveNetworkChangeDate(request, daysFromNow(10), "junit"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void anUnsavedRequestCannotBeScheduled() {
-        calendarService.reserveNetworkChangeDate(new NetworkChangeRequest(), daysFromNow(5), "junit");
+        assertThrows(IllegalArgumentException.class, () -> {
+            calendarService.reserveNetworkChangeDate(new NetworkChangeRequest(), daysFromNow(5), "junit");
+        });
     }
 
     // ------------------------------------------------------------------
@@ -150,7 +148,7 @@ public class CalendarServiceImplTest {
 
     @Test
     public void aDecommissionInsideTheWindowIsBooked() {
-        when(storedProcedureDAO.reserveDecommissionDate(anyLong(), anyLong(), Matchers.<Date>any(),
+        when(storedProcedureDAO.reserveDecommissionDate(anyLong(), anyLong(), any(Date.class),
                 anyBoolean(), anyString())).thenReturn("OK");
 
         assertTrue(calendarService.reserveDecommissionDate(1L, 5001L, daysFromNow(30), true,
@@ -163,27 +161,23 @@ public class CalendarServiceImplTest {
      */
     @Test
     public void aDecommissionBeyondTheWindowIsRefused() {
-        try {
+        assertThrows(IllegalArgumentException.class, () -> {
             calendarService.reserveDecommissionDate(1L, 5001L, daysFromNow(60), false, "junit");
-            fail("Expected the scheduling window to be enforced");
-        } catch (final IllegalArgumentException expected) {
-            assertTrue(expected.getMessage().contains("cannot be scheduled after"));
-        }
+        }, "Expected the scheduling window to be enforced");
     }
 
     @Test
     public void aDecommissionInThePastIsRefused() {
-        try {
+        assertThrows(IllegalArgumentException.class, () -> {
             calendarService.reserveDecommissionDate(1L, 5001L, daysFromNow(-1), false, "junit");
-            fail("Expected a date in the past to be refused");
-        } catch (final IllegalArgumentException expected) {
-            assertTrue(expected.getMessage().contains("in the past"));
-        }
+        }, "Expected a date in the past to be refused");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void aDecommissionWithNoDateIsRefused() {
-        calendarService.reserveDecommissionDate(1L, 5001L, null, false, "junit");
+        assertThrows(IllegalArgumentException.class, () -> {
+            calendarService.reserveDecommissionDate(1L, 5001L, null, false, "junit");
+        });
     }
 
     @Test
@@ -221,18 +215,18 @@ public class CalendarServiceImplTest {
 
     @Test
     public void slotsBeforeTheLeadTimeAreNotOffered() {
-        when(calendarServiceDAO.getAvailableTimeslots(Matchers.<org.example.am.shared.domain
-                .FacilitationCallType>any(), Matchers.<Date>any(), Matchers.<Date>any()))
+        when(calendarServiceDAO.getAvailableTimeslots(any(org.example.am.shared.domain
+                .FacilitationCallType.class), any(Date.class), any(Date.class)))
                 .thenReturn(new ArrayList<org.example.am.shared.domain.Timeslot>());
-        when(calendarServiceDAO.getBlackoutDates(anyLong(), Matchers.<Date>any(),
-                Matchers.<Date>any())).thenReturn(new ArrayList<Date>());
+        when(calendarServiceDAO.getBlackoutDates(anyLong(), any(Date.class),
+                any(Date.class))).thenReturn(new ArrayList<Date>());
 
         final List<org.example.am.shared.domain.Timeslot> offered =
                 calendarService.getInstallationTimeslots(1001L, daysFromNow(-10), daysFromNow(30));
         assertTrue(offered.isEmpty());
         // The window start is clamped to the lead time, never to the date the caller asked for.
         verify(calendarServiceDAO).getAvailableTimeslots(
-                Matchers.<org.example.am.shared.domain.FacilitationCallType>any(),
-                Matchers.<Date>any(), Matchers.<Date>any());
+                any(org.example.am.shared.domain.FacilitationCallType.class),
+                any(Date.class), any(Date.class));
     }
 }

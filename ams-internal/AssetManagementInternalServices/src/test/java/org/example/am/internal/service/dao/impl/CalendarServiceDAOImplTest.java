@@ -1,8 +1,8 @@
 package org.example.am.internal.service.dao.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -12,7 +12,7 @@ import org.example.am.internal.service.AbstractInternalTest;
 import org.example.am.internal.service.dao.CalendarServiceDAO;
 import org.example.am.shared.domain.FacilitationCallType;
 import org.example.am.shared.domain.Timeslot;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class CalendarServiceDAOImplTest extends AbstractInternalTest {
