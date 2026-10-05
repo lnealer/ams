@@ -55,7 +55,7 @@
     <junit.version>5.10.2</junit.version>
     <junit-platform.version>1.10.2</junit-platform.version>
     <!-- Mockito 5.x for Java 21 -->
-    <mockito.version>5.7.1</mockito.version>
+    <mockito.version>5.7.0</mockito.version>
 
     <jacoco.plugin.version>0.8.11</jacoco.plugin.version>
 
