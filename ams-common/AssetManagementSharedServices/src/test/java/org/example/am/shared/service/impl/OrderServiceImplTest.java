@@ -1,13 +1,17 @@
 package org.example.am.shared.service.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -41,19 +45,18 @@ import org.example.am.shared.domain.Timeslot;
 import org.example.am.shared.service.CalendarService;
 import org.example.am.shared.service.ConfigService;
 import org.example.am.shared.service.ShippingCalendarService;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Matchers;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * Unit test rather than an integration test: the point is the branching around the penalty window
  * and the notification side effects, not the SQL.
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class OrderServiceImplTest {
 
     private static final long CUSTOMER_ID = 1001L;
@@ -97,7 +100,7 @@ public class OrderServiceImplTest {
 
     private Order order;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         order = new Order();
         order.setOrderId(Long.valueOf(ORDER_ID));
@@ -108,7 +111,7 @@ public class OrderServiceImplTest {
 
         when(configService.getInt(
                 eq(PropertyType.MIN_HOURS_BEFORE_INSTALLATION_TO_CANCEL_ORDER_WITHOUT_PENALTY),
-                Matchers.anyInt())).thenReturn(Integer.valueOf(48));
+                anyInt())).thenReturn(Integer.valueOf(48));
         when(orderDAO.getOrder(CUSTOMER_ID, ORDER_ID)).thenReturn(order);
     }
 
@@ -137,22 +140,22 @@ public class OrderServiceImplTest {
     public void cancellingWellAheadOfInstallationIncursNoPenalty() {
         order.setRequestedInstallationDate(hoursFromNow(96));
         when(orderDAO.cancelOrder(anyLong(), anyString(), anyBoolean(),
-                Matchers.<Date>any(), anyString())).thenReturn(Integer.valueOf(1));
+                any(Date.class), anyString())).thenReturn(Integer.valueOf(1));
 
         assertTrue(orderService.cancelOrder(CUSTOMER_ID, ORDER_ID, "Not needed", "junit"));
         verify(orderDAO).cancelOrder(eq(ORDER_ID), eq("Not needed"), eq(false),
-                Matchers.<Date>any(), eq("junit"));
+                any(Date.class), eq("junit"));
     }
 
     @Test
     public void cancellingInsideTheWindowIncursThePenalty() {
         order.setRequestedInstallationDate(hoursFromNow(12));
         when(orderDAO.cancelOrder(anyLong(), anyString(), anyBoolean(),
-                Matchers.<Date>any(), anyString())).thenReturn(Integer.valueOf(1));
+                any(Date.class), anyString())).thenReturn(Integer.valueOf(1));
 
         assertTrue(orderService.cancelOrder(CUSTOMER_ID, ORDER_ID, "Site not ready", "junit"));
         verify(orderDAO).cancelOrder(eq(ORDER_ID), eq("Site not ready"), eq(true),
-                Matchers.<Date>any(), eq("junit"));
+                any(Date.class), eq("junit"));
     }
 
     @Test
@@ -167,16 +170,18 @@ public class OrderServiceImplTest {
     @Test
     public void losingTheRaceToCancelRaisesNoSideEffects() {
         when(orderDAO.cancelOrder(anyLong(), anyString(), anyBoolean(),
-                Matchers.<Date>any(), anyString())).thenReturn(Integer.valueOf(0));
+                any(Date.class), anyString())).thenReturn(Integer.valueOf(0));
 
         assertFalse(orderService.cancelOrder(CUSTOMER_ID, ORDER_ID, "Too late", "junit"));
-        verify(requestDAO, never()).recordEvent(Matchers.<EventType>any(),
-                Matchers.<EmailEntityType>any(), anyLong(), anyString(), anyString());
+        verify(requestDAO, never()).recordEvent(any(),
+                any(), anyLong(), anyString(), anyString());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void cancellingAnUnknownOrderIsAProgrammingError() {
-        orderService.cancelOrder(CUSTOMER_ID, 999999L, "Nope", "junit");
+        assertThrows(IllegalArgumentException.class, () -> {
+            orderService.cancelOrder(CUSTOMER_ID, 999999L, "Nope", "junit");
+        });
     }
 
     /**
@@ -190,18 +195,18 @@ public class OrderServiceImplTest {
 
         orderService.submitOrder(order, "junit");
 
-        verify(addressDAO).insertAddress(Matchers.<Address>any(), eq("junit"));
+        verify(addressDAO).insertAddress(any(Address.class), eq("junit"));
         // Three contacts, three rows: the same person in two roles is still two records.
-        verify(contactDAO, org.mockito.Mockito.times(3))
-                .insertContact(Matchers.<Contact>any(), eq("junit"));
+        verify(contactDAO, times(3))
+                .insertContact(any(Contact.class), eq("junit"));
         verify(maintenanceWindowDAO).insertMaintenanceWindowForOrder(
-                Matchers.<MaintenanceWindow>any(), eq(7777L), eq("junit"));
-        verify(assetConfigDAO).insertOrderConfiguration(Matchers.<AssetConfiguration>any(),
+                any(MaintenanceWindow.class), eq(7777L), eq("junit"));
+        verify(assetConfigDAO).insertOrderConfiguration(any(AssetConfiguration.class),
                 eq(7777L), eq("junit"));
-        verify(subscriberPcDAO).replaceSubscriberPcs(Matchers.<java.util.List<SubscriberPc>>any(),
+        verify(subscriberPcDAO).replaceSubscriberPcs(any(java.util.List.class),
                 eq(7777L), eq("junit"));
-        verify(orderDAO).linkOrderArtifacts(eq(7777L), Matchers.<Long>any(), Matchers.<Long>any(),
-                Matchers.<Long>any(), eq("junit"));
+        verify(orderDAO).linkOrderArtifacts(eq(7777L), any(Long.class), any(Long.class),
+                any(Long.class), eq("junit"));
     }
 
     /**
@@ -216,20 +221,20 @@ public class OrderServiceImplTest {
 
         orderService.submitOrder(order, "junit");
 
-        verify(contactDAO, org.mockito.Mockito.times(2))
-                .insertContact(Matchers.<Contact>any(), eq("junit"));
+        verify(contactDAO, times(2))
+                .insertContact(any(Contact.class), eq("junit"));
     }
 
     @Test
     public void theDespatchWindowIsReservedAndLinked() {
         when(orderDAO.insertOrder(order, "junit")).thenReturn(Long.valueOf(7777L));
         when(storedProcedureDAO.reserveTimeslot(eq(9705L), eq(7777L), eq("SHIP"),
-                Matchers.<Date>any(), eq("junit"))).thenReturn("OK");
+                any(Date.class), eq("junit"))).thenReturn("OK");
         populateFullOrder();
 
         orderService.submitOrder(order, "junit");
 
-        verify(orderDAO).linkOrderArtifacts(eq(7777L), Matchers.<Long>any(), Matchers.<Long>any(),
+        verify(orderDAO).linkOrderArtifacts(eq(7777L), any(Long.class), any(Long.class),
                 eq(Long.valueOf(9705L)), eq("junit"));
     }
 
@@ -242,14 +247,14 @@ public class OrderServiceImplTest {
     public void losingTheDespatchWindowStillPlacesTheOrderWithoutOne() {
         when(orderDAO.insertOrder(order, "junit")).thenReturn(Long.valueOf(7777L));
         when(storedProcedureDAO.reserveTimeslot(anyLong(), anyLong(), anyString(),
-                Matchers.<Date>any(), anyString())).thenReturn("NO_CAPACITY");
+                any(Date.class), anyString())).thenReturn("NO_CAPACITY");
         populateFullOrder();
 
         final long orderId = orderService.submitOrder(order, "junit");
 
         assertEquals(7777L, orderId);
         assertEquals(null, order.getShippingWindowTimeslotId());
-        verify(orderDAO).linkOrderArtifacts(eq(7777L), Matchers.<Long>any(), Matchers.<Long>any(),
+        verify(orderDAO).linkOrderArtifacts(eq(7777L), any(Long.class), any(Long.class),
                 eq((Long) null), eq("junit"));
     }
 
@@ -264,7 +269,7 @@ public class OrderServiceImplTest {
         orderService.submitOrder(order, "junit");
 
         verify(storedProcedureDAO, never()).reserveTimeslot(anyLong(), anyLong(), eq("SHIP"),
-                Matchers.<Date>any(), anyString());
+                any(Date.class), anyString());
     }
 
     /** Fills the order with what the six ordering steps would have collected. */
@@ -317,6 +322,6 @@ public class OrderServiceImplTest {
         order.setSubmittedDate(new Date());
         orderService.getEarliestInstallationDate(order);
         // 15 business days for a migration, per Order.getInstallLeadTimeDays().
-        verify(calendarService).addBusinessDays(Matchers.<Date>any(), eq(15));
+        verify(calendarService).addBusinessDays(any(Date.class), eq(15));
     }
 }

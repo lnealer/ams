@@ -1,11 +1,11 @@
 package org.example.am.shared.service.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -21,18 +21,18 @@ import org.example.am.shared.domain.PropertyType;
 import org.example.am.shared.domain.SubscriberPc;
 import org.example.am.shared.domain.SubscriberPcType;
 import org.example.am.shared.service.ConfigService;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * The suggestions have one hard requirement: whatever is put in the form has to pass the validator
  * that guards the same screen. A suggestion that fails validation is worse than a blank field,
  * because the operator did not type it and will not think to look at it.
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class OrderDefaultsServiceImplTest {
 
     private static final long CUSTOMER_ID = 1010L;
@@ -88,7 +88,7 @@ public class OrderDefaultsServiceImplTest {
 
         final List<String> problems = new LanTypeAValidator().validate(configuration.getLanIpAddress(),
                 configuration.getLanSubnetMask(), configuration.getLanGateway());
-        assertTrue("suggested LAN was rejected: " + problems, problems.isEmpty());
+        assertTrue(problems.isEmpty(), "suggested LAN was rejected: " + problems);
         assertEquals("192.168.10.1", configuration.getLanIpAddress());
         assertEquals("192.168.10.254", configuration.getLanGateway());
     }
@@ -113,7 +113,7 @@ public class OrderDefaultsServiceImplTest {
         final List<String> problems = new WanValidator().validate(configuration.getWanIpAddress(),
                 configuration.getWanSubnetMask(), configuration.getDefaultGateway(),
                 configuration.getPrimaryDnsAddress(), configuration.getSecondaryDnsAddress());
-        assertTrue("pool allocation was rejected: " + problems, problems.isEmpty());
+        assertTrue(problems.isEmpty(), "pool allocation was rejected: " + problems);
     }
 
     @Test
@@ -167,7 +167,7 @@ public class OrderDefaultsServiceImplTest {
         final List<String> problems = new WanValidator().validate(configuration.getWanIpAddress(),
                 configuration.getWanSubnetMask(), configuration.getDefaultGateway(),
                 configuration.getPrimaryDnsAddress(), configuration.getSecondaryDnsAddress());
-        assertTrue("carried WAN was rejected: " + problems, problems.isEmpty());
+        assertTrue(problems.isEmpty(), "carried WAN was rejected: " + problems);
     }
 
     @Test
