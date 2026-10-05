@@ -30,7 +30,7 @@
     <log4j2.version>2.26.0</log4j2.version>
     <jackson.version>2.20.2</jackson.version>
 
-    <servlet-api.version>4.0.1</servlet-api.version>
+    <servlet-api.version>6.0.0</servlet-api.version>
     <jstl.version>1.2</jstl.version>
     <jakarta-annotation.version>2.1.1</jakarta-annotation.version>
 
