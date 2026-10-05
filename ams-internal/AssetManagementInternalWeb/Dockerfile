@@ -5,16 +5,9 @@
 # application was installed into a shared application server before this - but a container runs one
 # application, so the extra packaging layer buys nothing here.
 # ------------------------------------------------------------------------------
-# The specification names 26.0.0.2-full-java8-openj9-ubi-minimal. That tag does not exist, and
-# neither does any java8+openj9 combination: IBM publishes Java 8 Liberty images only on IBM Java,
-# and OpenJ9 variants start at Java 11. This is the closest real equivalent - same Liberty "full"
-# feature set, same Java 8.
-#
-# Java 8 is kept rather than moving to a Java 11/17 image because the whole build targets it:
-# maven.compiler.target=1.8, the jdbc-4.1 feature in server.xml, and ojdbc8 rather than ojdbc11.
-# The cost is that no Java 8 Liberty image has an arm64 build, so on Apple Silicon this runs
-# under emulation - see the platform pin in docker-compose.yml.
-FROM websphere-liberty:26.0.0.8-full-java8-ibmjava
+# Updated to Java 21 with WebSphere Liberty 26.0.0.8 supporting Jakarta EE 9+.
+# The platform pin for amd64 is removed as Java 21 Liberty images support arm64 natively.
+FROM websphere-liberty:26.0.0.8-full-java21-ibmjava
 
 USER root
 

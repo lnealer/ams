@@ -4,11 +4,16 @@
   <!--
     Only the features the application actually uses. Liberty starts what is listed and nothing
     else, so keeping this list minimal is both a startup-time and an attack-surface decision.
+    
+    Updated for Jakarta EE 9+ (Java 21):
+    - servlet-3.1 → servlet-6.0 (Jakarta Servlet)
+    - jsp-2.3 → pages-3.1 (Jakarta Pages)
+    - jdbc-4.1 → jdbc-4.3 (Jakarta JDBC)
   -->
   <featureManager>
-    <feature>servlet-3.1</feature>
-    <feature>jsp-2.3</feature>
-    <feature>jdbc-4.1</feature>
+    <feature>servlet-6.0</feature>
+    <feature>pages-3.1</feature>
+    <feature>jdbc-4.3</feature>
     <feature>transportSecurity-1.0</feature>
     <feature>ssl-1.0</feature>
     <feature>mpMetrics-1.1</feature>

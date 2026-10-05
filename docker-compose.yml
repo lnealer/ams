@@ -52,14 +52,7 @@ services:
     build:
       context: ./ams-internal/AssetManagementInternalWeb
       dockerfile: Dockerfile
-      # No Java 8 Liberty image is published for arm64 - IBM Java 8 was never built for it, and the
-      # OpenJ9 Liberty variants start at Java 11. Since the application targets Java 8 bytecode and
-      # server.xml pins the jdbc-4.1 feature, the Java version is kept and the architecture given
-      # up instead: on Apple Silicon this layer runs emulated. Slower to start, correct otherwise.
-      # Drop both platform lines on an amd64 host.
-      platforms:
-        - linux/amd64
-    platform: linux/amd64
+      # Java 21 Liberty images support arm64 natively, so the platform pin is no longer needed.
     container_name: ams-app
     depends_on:
       oracle:
