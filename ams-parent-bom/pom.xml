@@ -169,6 +169,12 @@
         <artifactId>spring-security-taglibs</artifactId>
         <version>${spring-security.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-test</artifactId>
+        <version>${spring-security.version}</version>
+        <scope>test</scope>
+      </dependency>
 
       <!-- ==================== Logging ==================== -->
       <dependency>
@@ -215,7 +221,7 @@
       </dependency>
       <!--
         The JSR-250 security annotations. the servlet container provides these at runtime, so the scope is
-        provided - but @EnableGlobalMethodSecurity(jsr250Enabled = true) needs them on the compile
+        provided - but @EnableMethodSecurity(jsr250Enabled = true) needs them on the compile
         and test classpath, or the security configuration cannot be built outside the container.
       -->
       <dependency>
@@ -363,6 +369,11 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>3.2.5</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.4.1</version>
         </plugin>
       </plugins>
     </pluginManagement>
