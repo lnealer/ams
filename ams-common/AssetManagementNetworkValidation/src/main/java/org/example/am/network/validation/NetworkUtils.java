@@ -1,6 +1,6 @@
 package org.example.am.network.validation;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Dotted-quad helpers shared by every LAN/WAN validator.
