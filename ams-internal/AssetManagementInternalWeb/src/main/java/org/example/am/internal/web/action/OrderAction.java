@@ -3,6 +3,7 @@ package org.example.am.internal.web.action;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.struts2.convention.annotation.StrutsParameter;
 import com.opensymphony.xwork2.Action;
 import org.example.am.internal.security.SecurityRoleType;
 import org.example.am.shared.domain.Asset;
@@ -100,6 +101,7 @@ public class OrderAction extends BaseAction {
         return assetId;
     }
 
+    @StrutsParameter
     public void setAssetId(final Long assetId) {
         this.assetId = assetId;
     }
@@ -108,6 +110,7 @@ public class OrderAction extends BaseAction {
         return customerId;
     }
 
+    @StrutsParameter
     public void setCustomerId(final Long customerId) {
         this.customerId = customerId;
     }
