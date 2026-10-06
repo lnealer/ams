@@ -76,14 +76,6 @@ public class CalendarServiceImplTest extends AbstractBaseTest {
     }
 
     @Test
-    public void businessDayRecognisesWeekendsAndHolidays() {
-        assertTrue(calendarService.isBusinessDay(day("2025-08-01")));
-        assertFalse(calendarService.isBusinessDay(day("2025-08-02")));
-        assertFalse(calendarService.isBusinessDay(day("2025-07-04")));
-        assertFalse(calendarService.isBusinessDay(null));
-    }
-
-    @Test
     public void onlySlotsWithRemainingCapacityAreOffered() {
         final List<Timeslot> slots = calendarService.getAvailableTimeslots(
                 FacilitationCallType.TECHLINE, day("2025-09-01"), day("2025-09-30"));

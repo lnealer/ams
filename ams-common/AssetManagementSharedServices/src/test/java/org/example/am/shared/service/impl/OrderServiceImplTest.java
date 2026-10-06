@@ -46,14 +46,26 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+<<<<<<< Updated upstream
 import org.mockito.Matchers;
 import org.mockito.runners.MockitoJUnitRunner;
+=======
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
+>>>>>>> Stashed changes
 
 /**
  * Unit test rather than an integration test: the point is the branching around the penalty window
  * and the notification side effects, not the SQL.
  */
+<<<<<<< Updated upstream
 @RunWith(MockitoJUnitRunner.class)
+=======
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+>>>>>>> Stashed changes
 public class OrderServiceImplTest {
 
     private static final long CUSTOMER_ID = 1001L;
