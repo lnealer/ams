@@ -12,8 +12,8 @@
   <description>Parent POM and dependency BOM for the Asset Management System platform.</description>
 
   <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
@@ -47,8 +47,8 @@
 
     <h2.version>1.3.176</h2.version>
     <aspectj.version>1.7.4</aspectj.version>
-    <junit.version>4.12</junit.version>
-    <mockito.version>1.9.5</mockito.version>
+    <junit.version>5.11.3</junit.version>
+    <mockito.version>5.14.1</mockito.version>
 
     <jacoco.plugin.version>0.8.5</jacoco.plugin.version>
 
@@ -282,14 +282,26 @@
 
       <!-- ==================== Test ==================== -->
       <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-api</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-engine</artifactId>
         <version>${junit.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
-        <artifactId>mockito-all</artifactId>
+        <artifactId>mockito-core</artifactId>
+        <version>${mockito.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-junit-jupiter</artifactId>
         <version>${mockito.version}</version>
         <scope>test</scope>
       </dependency>
@@ -315,12 +327,12 @@
       <artifactId>log4j-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
-      <artifactId>mockito-all</artifactId>
+      <artifactId>mockito-core</artifactId>
     </dependency>
   </dependencies>
 
@@ -367,15 +379,9 @@
     <!--
       What a build on a modern JDK needs and a Java 8 build must not see.
 
-      The application is Java 8. A JDK 8 javac compiles it with -source/-target 1.8 and the JVM runs
-      the tests with no module flags. On JDK 9 and later two things change. The compiler is told
-      "release 8", so it compiles against the Java 8 class library - with plain -source/-target it
-      would accept a Java 9+ API and the call would fail only at runtime on Java 8. And the pinned
-      Mockito bundles a cglib that predates the module system and defines its proxies through
-      ClassLoader.defineClass reflectively, so the test JVM has java.lang opened to it - a flag a
-      Java 8 JVM rejects at startup, which is why it lives here rather than in the main Surefire
-      configuration. Neither setting changes what is packaged: the class files are version 52 either
-      way.
+      The application is now Java 17. A JDK 17 javac compiles it with -source/-target 17 and the JVM runs
+      the tests with module system support. The jdk9plus profile is retained for reference but is no longer
+      needed since we are now targeting Java 17 as the minimum.
     -->
     <profile>
       <id>jdk9plus</id>
@@ -383,7 +389,7 @@
         <jdk>[9,)</jdk>
       </activation>
       <properties>
-        <maven.compiler.release>8</maven.compiler.release>
+        <maven.compiler.release>17</maven.compiler.release>
       </properties>
       <build>
         <plugins>

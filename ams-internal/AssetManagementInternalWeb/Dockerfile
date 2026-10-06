@@ -6,11 +6,9 @@
 # application, so the extra packaging layer buys nothing here.
 # ------------------------------------------------------------------------------
 # Tomcat 9 (Servlet 4.0 / JSP 2.3, the javax.* namespace the application is written against) on
-# Temurin JDK 8, the JDK the application is built for (maven.compiler.source/target 1.8). The WAR is
-# Java 8 bytecode and also runs on newer JDKs - the local jdk21 instance proves it - so the base
-# image can move to a newer JDK without a rebuild. The image has an arm64 build, so nothing runs
-# emulated on Apple Silicon.
-FROM tomcat:9.0-jdk8-temurin
+# Temurin JDK 17, the JDK the application is now built for (maven.compiler.source/target 17).
+# The image has an arm64 build, so nothing runs emulated on Apple Silicon.
+FROM tomcat:9.0-jdk17-temurin
 
 USER root
 
@@ -42,11 +40,10 @@ RUN echo 'org.apache.tomcat.util.digester.PROPERTY_SOURCE=org.apache.tomcat.util
 # outbound calls complete; without it every one fails the TLS handshake.
 # ------------------------------------------------------------------------------
 COPY certs/internal-ca.crt /tmp/internal-ca.crt
-# The keystore path is detected rather than hard-coded. On a JDK 8 layout cacerts sits at
-# $JAVA_HOME/jre/lib/security/cacerts; the fallback covers JDK 9+ layouts should the base image move.
+# The keystore path is detected rather than hard-coded. On a JDK 17 layout cacerts sits at
+# $JAVA_HOME/lib/security/cacerts.
 RUN set -eux; \
-    CACERTS="$JAVA_HOME/jre/lib/security/cacerts"; \
-    [ -f "$CACERTS" ] || CACERTS="$JAVA_HOME/lib/security/cacerts"; \
+    CACERTS="$JAVA_HOME/lib/security/cacerts"; \
     [ -f "$CACERTS" ] || { echo "no cacerts under $JAVA_HOME"; exit 1; }; \
     keytool -importcert -noprompt -trustcacerts \
       -alias ams-internal-ca \
