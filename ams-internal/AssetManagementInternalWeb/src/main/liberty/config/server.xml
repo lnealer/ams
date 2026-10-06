@@ -6,8 +6,8 @@
     else, so keeping this list minimal is both a startup-time and an attack-surface decision.
   -->
   <featureManager>
-    <feature>servlet-3.1</feature>
-    <feature>jsp-2.3</feature>
+    <feature>servlet-6.0</feature>
+    <feature>pages-3.1</feature>
     <feature>jdbc-4.1</feature>
     <feature>transportSecurity-1.0</feature>
     <feature>ssl-1.0</feature>

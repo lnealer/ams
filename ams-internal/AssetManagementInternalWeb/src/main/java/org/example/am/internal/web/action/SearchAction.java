@@ -3,6 +3,7 @@ package org.example.am.internal.web.action;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.struts2.convention.annotation.StrutsParameter;
 import org.example.am.internal.security.SecurityRoleType;
 import org.example.am.internal.service.CustomerService;
 import org.example.am.internal.web.model.AssetGridRow;
@@ -211,6 +212,7 @@ public class SearchAction extends BaseAction {
         return customerTerm;
     }
 
+    @StrutsParameter
     public void setCustomerTerm(final String customerTerm) {
         this.customerTerm = customerTerm;
     }
@@ -219,6 +221,7 @@ public class SearchAction extends BaseAction {
         return selectedCustomerId;
     }
 
+    @StrutsParameter
     public void setSelectedCustomerId(final Long selectedCustomerId) {
         this.selectedCustomerId = selectedCustomerId;
     }
