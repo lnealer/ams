@@ -1,8 +1,8 @@
 package org.example.am.internal.service.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -12,7 +12,7 @@ import org.example.am.internal.security.SecurityRoleType;
 import org.example.am.internal.security.WebSealPrincipal;
 import org.example.am.internal.service.AbstractInternalTest;
 import org.example.am.internal.service.AmsUserDetailsService;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
@@ -99,10 +99,15 @@ public class AmsUserDetailsServiceImplTest extends AbstractInternalTest {
         assertEquals(1, user.getAuthorities().size());
     }
 
-    @Test(expected = UsernameNotFoundException.class)
+    @Test
     public void aTokenWithNoIdentityIsRejected() {
-        amsUserDetailsService.loadUserDetails(
-                new PreAuthenticatedAuthenticationToken(new WebSealPrincipal("   "), "N/A"));
+        try {
+            amsUserDetailsService.loadUserDetails(
+                    new PreAuthenticatedAuthenticationToken(new WebSealPrincipal("   "), "N/A"));
+            throw new AssertionError("Expected UsernameNotFoundException");
+        } catch (UsernameNotFoundException expected) {
+            // Expected
+        }
     }
 
     @Test
