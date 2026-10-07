@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -86,9 +87,9 @@ public class AddressValidationInterceptorTest {
         model = new InstallOrderModel();
         model.setSiteAddress(completeAddress());
 
-        when(invocation.getAction()).thenReturn(new StubAction(model));
-        when(invocation.invoke()).thenReturn(Action.SUCCESS);
-        when(configService.getBoolean(eq(PropertyType.ADDRESS_VALIDATION_ENABLED),
+        lenient().when(invocation.getAction()).thenReturn(new StubAction(model));
+        lenient().when(invocation.invoke()).thenReturn(Action.SUCCESS);
+        lenient().when(configService.getBoolean(eq(PropertyType.ADDRESS_VALIDATION_ENABLED),
                 org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(Boolean.TRUE);
     }
 
@@ -164,8 +165,8 @@ public class AddressValidationInterceptorTest {
         runAndCaptureListener().beforeResult(invocation, Action.SUCCESS);
 
         verify(invocation).setResultCode(InternalConstants.RESULT_AV_SUGGESTION);
-        assertNotNull("the suggestion has to reach the model or the page has nothing to show",
-                model.getSuggestedAddress());
+        assertNotNull(model.getSuggestedAddress(),
+                "the suggestion has to reach the model or the page has nothing to show");
         assertEquals("100 Main Street", model.getSuggestedAddress().getAddressLine1());
     }
 
@@ -189,8 +190,8 @@ public class AddressValidationInterceptorTest {
 
         verify(invocation).setResultCode(InternalConstants.RESULT_AV_ERROR);
         assertFalse(model.getSiteAddress().isValidated());
-        assertTrue("the site page needs to know to offer continuing unverified",
-                model.isAddressCheckUnavailable());
+        assertTrue(model.isAddressCheckUnavailable(),
+                "the site page needs to know to offer continuing unverified");
     }
 
     /**

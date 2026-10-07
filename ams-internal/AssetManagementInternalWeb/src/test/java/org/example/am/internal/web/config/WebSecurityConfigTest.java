@@ -141,10 +141,10 @@ public class WebSecurityConfigTest {
             final MockHttpServletResponse response = mockMvc.perform(
                     org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get(path))
                     .andReturn().getResponse();
-            assertEquals(path + " should be refused", HttpStatus.FORBIDDEN.value(),
-                    response.getStatus());
-            assertTrue(path + " must not redirect to a login page",
-                    response.getRedirectedUrl() == null);
+            assertEquals(HttpStatus.FORBIDDEN.value(), response.getStatus(),
+                    path + " should be refused");
+            assertTrue(response.getRedirectedUrl() == null,
+                    path + " must not redirect to a login page");
         }
     }
 
@@ -157,8 +157,8 @@ public class WebSecurityConfigTest {
                         .header("iv-user", "opsuser")
                         .header("iv-groups", "AMS_INTERNAL_OPERATIONS"))
                 .andReturn().getResponse();
-        assertTrue("Expected the request to get past security, got " + response.getStatus(),
-                response.getStatus() != HttpStatus.FORBIDDEN.value());
+        assertTrue(response.getStatus() != HttpStatus.FORBIDDEN.value(),
+                "Expected the request to get past security, got " + response.getStatus());
     }
 
     /** The proxy's "not signed in" literal must not authenticate anyone. */
@@ -202,8 +202,8 @@ public class WebSecurityConfigTest {
                 org.springframework.test.web.servlet.request.MockMvcRequestBuilders
                         .get("/Home.action"))
                 .andReturn().getResponse();
-        assertTrue("HSTS should not be sent over plain HTTP",
-                plain.getHeader("Strict-Transport-Security") == null);
+        assertTrue(plain.getHeader("Strict-Transport-Security") == null,
+                "HSTS should not be sent over plain HTTP");
 
         final MockHttpServletResponse secure = mockMvc.perform(
                 org.springframework.test.web.servlet.request.MockMvcRequestBuilders
@@ -226,7 +226,7 @@ public class WebSecurityConfigTest {
     }
 
     private static void assertNotEqualsForbidden(final MockHttpServletResponse response) {
-        assertTrue("Expected the request to be permitted, got " + response.getStatus(),
-                response.getStatus() != HttpStatus.FORBIDDEN.value());
+        assertTrue(response.getStatus() != HttpStatus.FORBIDDEN.value(),
+                "Expected the request to be permitted, got " + response.getStatus());
     }
 }

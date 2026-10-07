@@ -82,7 +82,7 @@ public class JspSubmitActionTest {
         final Path strutsXml = Paths.get(new File("").getAbsolutePath(),
                 "src", "main", "resources", "struts.xml");
         final String body = new String(Files.readAllBytes(strutsXml), StandardCharsets.UTF_8);
-        assertTrue("struts.mapper.action.prefix.enabled must not be turned on",
-                !ACTION_PREFIX_ENABLED.matcher(body).find());
+        assertTrue(!ACTION_PREFIX_ENABLED.matcher(body).find(),
+                "struts.mapper.action.prefix.enabled must not be turned on");
     }
 }

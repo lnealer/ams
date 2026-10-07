@@ -75,11 +75,13 @@ public class CustomerSwitchSessionTest {
     @Test
     public void switchingCustomerDiscardsTheOrderInProgress() {
         startAnOrderFor(1002L);
-        assertNotNull("precondition: an order is in progress", orderModel());
+        assertNotNull(orderModel(),
+                "precondition: an order is in progress");
 
         action.setCurrentCustomer(customer(1011L));
 
-        assertNull("the order started for 1002 must not survive the switch to 1011", orderModel());
+        assertNull(orderModel(),
+                "the order started for 1002 must not survive the switch to 1011");
         assertEquals(Long.valueOf(1011L), action.getCurrentCustomerId());
     }
 
@@ -92,7 +94,8 @@ public class CustomerSwitchSessionTest {
         // accident; throwing their half-filled order away for it would be its own bug.
         action.setCurrentCustomer(customer(1011L));
 
-        assertSame("the same customer must not discard the order", before, orderModel());
+        assertSame(before, orderModel(),
+                "the same customer must not discard the order");
     }
 
     @Test

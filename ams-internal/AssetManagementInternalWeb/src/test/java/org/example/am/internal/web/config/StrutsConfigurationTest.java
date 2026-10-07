@@ -67,7 +67,7 @@ public class StrutsConfigurationTest {
         rootDocument = builder.parse(new File(RESOURCES, "struts.xml"));
 
         final File[] files = RESOURCES.listFiles();
-        assertNotNull("No configuration files were found", files);
+        assertNotNull(files, "No configuration files were found");
         for (final File file : files) {
             if (!file.getName().startsWith("struts") || !file.getName().endsWith(".xml")) {
                 continue;
@@ -262,8 +262,8 @@ public class StrutsConfigurationTest {
     public void theEmptyExtensionIsAccepted() {
         final String extensions = getConstant("struts.action.extension");
         assertTrue(extensions.contains("action"));
-        assertTrue("The empty extension must be accepted for /health",
-                extensions.endsWith(",") || extensions.contains(",,"));
+        assertTrue(extensions.endsWith(",") || extensions.contains(",,"),
+                "The empty extension must be accepted for /health");
     }
 
     /** Every sub-configuration is actually included; one left out is silently dead. */

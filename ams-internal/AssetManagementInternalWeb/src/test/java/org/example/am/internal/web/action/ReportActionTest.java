@@ -73,7 +73,7 @@ public class ReportActionTest {
 
         final List<String> lines = readLines(action.getCsvStream());
         assertEquals(4, lines.size());
-        assertTrue(lines.get(0), lines.get(0).startsWith("# 2 customers"));
+        assertTrue(lines.get(0).startsWith("# 2 customers"));
         assertEquals("Customer,Account,Ordering,Open orders,Scheduled,Completed,Cancelled,"
                 + "Oldest open (days),Latest order,Latest submitted", lines.get(1));
         assertEquals("order-activity-20260902.csv", action.getCsvFileName());
