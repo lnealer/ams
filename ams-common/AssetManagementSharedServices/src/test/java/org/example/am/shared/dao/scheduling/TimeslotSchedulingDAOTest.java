@@ -178,9 +178,9 @@ public class TimeslotSchedulingDAOTest extends AbstractBaseTest {
                     + "WHERE TIMESLOT_ID = ?", Long.valueOf(SLOT_WITH_ROOM));
             throw new AssertionError("an over-capacity write was accepted");
         } catch (final org.springframework.dao.DataAccessException expected) {
-            assertTrue("expected a constraint violation, got: " + expected.getMessage(),
-                    expected.getMessage().contains("TIMESLOTS_RESERVED_CK")
-                            || expected.getMessage().contains("23513"));
+            assertTrue(expected.getMessage().contains("TIMESLOTS_RESERVED_CK")
+                            || expected.getMessage().contains("23513"),
+                    "expected a constraint violation, got: " + expected.getMessage());
         }
     }
 
