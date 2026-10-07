@@ -1,8 +1,7 @@
 package org.example.am.internal.service;
 
-import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -11,8 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>The context names are prefixed so they cannot be confused with the shared module's, which are
  * on the classpath too by way of its test-jar.</p>
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = {
+@SpringJUnitConfig(locations = {
         "classpath:internal-test-context-h2.xml",
         "classpath:internal-test-context-scan.xml" })
 @Transactional
