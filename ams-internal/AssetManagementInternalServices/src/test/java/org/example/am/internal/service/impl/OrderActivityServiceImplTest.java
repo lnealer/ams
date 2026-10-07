@@ -87,7 +87,7 @@ public class OrderActivityServiceImplTest {
 
         // NW-1 (5 days) is older than NW-3 (2 days); the completed and cancelled ones do not count.
         assertEquals(Integer.valueOf(5), line(report, NORTHWIND).getOldestOpenOrderAgeDays());
-        assertNull("nothing open, so no age", line(report, BEACON).getOldestOpenOrderAgeDays());
+        assertNull(line(report, BEACON).getOldestOpenOrderAgeDays(), () -> "nothing open, so no age");
     }
 
     @Test
@@ -117,9 +117,9 @@ public class OrderActivityServiceImplTest {
         assertEquals(at(2026, Calendar.OCTOBER, 7), report.getEarliestInstallationDate());
 
         final String summary = report.getSummary();
-        assertTrue(summary, summary.startsWith("2 customers, 2 open orders across 1 of them"));
-        assertTrue(summary, summary.contains("Installation Scheduled 1"));
-        assertTrue(summary, summary.endsWith("as of 2 Oct 2026 00:00."));
+        assertTrue(summary.startsWith("2 customers, 2 open orders across 1 of them"), () -> summary);
+        assertTrue(summary.contains("Installation Scheduled 1"), () -> summary);
+        assertTrue(summary.endsWith("as of 2 Oct 2026 00:00."), () -> summary);
     }
 
     /** An order with no status is counted in the totals but is neither open nor closed. */
