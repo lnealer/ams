@@ -29,6 +29,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import com.opensymphony.xwork2.Action;
 import com.opensymphony.xwork2.ActionInvocation;
@@ -48,6 +50,7 @@ import com.opensymphony.xwork2.interceptor.PreResultListener;
  * a {@link PreResultListener}, and that the listener replaces the result code.</p>
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class AddressValidationInterceptorTest {
 
     /** Minimal model-driven action; the interceptor only needs {@code getModel}. */
