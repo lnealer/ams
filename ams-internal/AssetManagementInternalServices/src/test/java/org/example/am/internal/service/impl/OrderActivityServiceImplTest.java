@@ -24,16 +24,14 @@ import org.example.am.shared.service.CustomerSearchService;
 import org.example.am.shared.service.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.MockitoAnnotations;
 
 /**
  * The report is a fold over every customer's orders, so the cases that matter are the counting
  * rules: which statuses count as open, how the oldest open order is aged, and the sort order.
  */
-@RunWith(MockitoJUnitRunner.class)
 public class OrderActivityServiceImplTest {
 
     private static final long NORTHWIND = 1001L;
@@ -55,6 +53,7 @@ public class OrderActivityServiceImplTest {
 
     @BeforeEach
     public void setUp() {
+        MockitoAnnotations.initMocks(this);
         when(customerSearchService.listAll(anyInt())).thenReturn(Arrays.asList(
                 customer(NORTHWIND, "Northwind Coffee Roasters", "NW-100", true),
                 customer(BEACON, "Beacon Hill Physio", "BH-200", false)));
